@@ -8,14 +8,15 @@ export class VertexArrayObject {
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl;
     this.vao = this.gl.createVertexArray();
-    this.activate();
+    this.bind();
   }
 
-  public activate() {
+  public bind() {
     this.gl.bindVertexArray(this.vao);
   }
 
-  public enableVertexAttribArray(
+  public static enableVertexAttribArray(
+    gl: WebGL2RenderingContext,
     buffer: CustomBuffer<any>,
     shaderProgram: ShaderProgram
   ) {
@@ -26,9 +27,9 @@ export class VertexArrayObject {
     console.log(`BufferIndex at: `, bufferIndex);
 
     buffer.bind();
-    this.gl.enableVertexAttribArray(bufferIndex);
+    gl.enableVertexAttribArray(bufferIndex);
     var { numComponents, type, normalize, stride, offset } = buffer.getLayout();
-    this.gl.vertexAttribPointer(
+    gl.vertexAttribPointer(
       bufferIndex,
       numComponents,
       type,

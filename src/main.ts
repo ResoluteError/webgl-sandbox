@@ -50,18 +50,6 @@ document.addEventListener("DOMContentLoaded", function () {
     shaderProgram.addShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
     shaderProgram.link();
 
-    shaderProgram.setUniform(
-      projectionMatrix.getUniformName(),
-      projectionMatrix.getMatrix(),
-      false
-    );
-
-    shaderProgram.setUniform(
-      modelViewMatrix.getUniformName(),
-      modelViewMatrix.getMatrix(),
-      false
-    );
-
     // Setup Vertex Array Object and bind it
     var vao = new VertexArrayObject(gl);
 
@@ -77,17 +65,34 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Actually buffer the data to the GPU
     vertexBuffer.bufferData();
-    vao.enableVertexAttribArray(vertexBuffer, shaderProgram);
+    VertexArrayObject.enableVertexAttribArray(gl, vertexBuffer, shaderProgram);
 
     const indexBuffer = new IndexBuffer(gl);
     indexBuffer.addItems([0, 1, 2, 2, 3, 4, 0, 4, 5]);
     indexBuffer.bufferData();
 
+    // Starting here is the draw loop per frame
+    clearCanvas(gl);
+
+    // Starting here is the draw loop per program
     shaderProgram.useProgram();
+
+    vao.bind();
+
+    shaderProgram.setUniform(
+      projectionMatrix.getUniformName(),
+      projectionMatrix.getMatrix(),
+      false
+    );
+
+    shaderProgram.setUniform(
+      modelViewMatrix.getUniformName(),
+      modelViewMatrix.getMatrix(),
+      false
+    );
 
     const offset = 0;
 
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.drawElements(
       gl.TRIANGLES,
       indexBuffer.getSize(),

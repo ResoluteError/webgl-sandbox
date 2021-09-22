@@ -40,11 +40,6 @@ export class ShaderProgram {
           this.gl.getProgramInfoLog(this.program)
       );
     }
-    console.log(
-      "Shader program linked successfully: ",
-      this.gl.getActiveUniform(this.program, 0),
-      this.gl.getActiveUniform(this.program, 1)
-    );
   }
 
   public getProgram() {
@@ -61,12 +56,6 @@ export class ShaderProgram {
 
   public setUniform(name: string, data: Float32List, transpose?: boolean) {
     var location = this.gl.getUniformLocation(this.program, name);
-    console.log(
-      `Location of ${name}: `,
-      location,
-      this.gl.getActiveUniform(this.program, 0),
-      this.gl.getActiveUniform(this.program, 1)
-    );
     this.gl.uniformMatrix4fv(location, transpose ?? false, data);
   }
 }
