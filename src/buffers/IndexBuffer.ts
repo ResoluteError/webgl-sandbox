@@ -1,36 +1,45 @@
-import { Canvas } from "../canvas/Canvas";
-import { ShaderProgram } from "../shaders/ShaderProgram";
+import { CustomBuffer } from "./Buffer.interface";
 
-export class IndexBuffer {
-  private gl: WebGLRenderingContext;
+export class IndexBuffer implements CustomBuffer<number> {
+  private gl: WebGL2RenderingContext;
   private buffer: WebGLBuffer;
   private indexes: number[];
 
-  constructor(canvas: Canvas) {
-    this.gl = canvas.getWebGL();
+  constructor(gl: WebGL2RenderingContext) {
+    this.gl = gl;
     this.buffer = this.gl.createBuffer();
-    this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.buffer);
+    this.bind();
     this.indexes = [];
   }
 
-  public addIndex(i : number) {
-    this.indexes.push(i);
+  public addItem(item: number) {
+    this.indexes.push(item);
   }
 
-  public addIndeces(iArr: number[]) {
-    this.indexes = this.indexes.concat(iArr);
+  public addItems(items: number[]) {
+    this.indexes = this.indexes.concat(items);
   }
 
-  public commit() {
-
+  public bufferData() {
     this.gl.bufferData(
       this.gl.ELEMENT_ARRAY_BUFFER,
       new Uint32Array(this.indexes),
       this.gl.STATIC_DRAW
     );
+  }
 
+  public bind() {
     this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.buffer);
+  }
 
+  public getLayout() {
+    return {
+      numComponents: 2,
+      type: this.gl.FLOAT,
+      normalize: false,
+      stride: 0,
+      offset: 0,
+    };
   }
 
   public getSize() {
@@ -38,6 +47,12 @@ export class IndexBuffer {
   }
 
   public getBuffer() {
-      return this.buffer;
+    return this.buffer;
+  }
+
+  public getAttribName() {
+    throw new Error(
+      "IndexBuffer is not linked to an attribute and stored directly on the VAO instead"
+    );
   }
 }

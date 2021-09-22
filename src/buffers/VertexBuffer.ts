@@ -1,50 +1,45 @@
-import { Canvas } from "../canvas/Canvas";
-import { ShaderProgram } from "../shaders/ShaderProgram";
+import { CustomBuffer } from "./Buffer.interface";
 
-export class VertexBuffer {
-  private gl: WebGLRenderingContext;
+export class VertexBuffer implements CustomBuffer<[number, number]> {
+  private gl: WebGL2RenderingContext;
   private buffer: WebGLBuffer;
   private positions: [number, number][];
 
-  constructor(canvas: Canvas) {
-    this.gl = canvas.getWebGL();
+  constructor(gl: WebGL2RenderingContext) {
+    this.gl = gl;
     this.buffer = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffer);
     this.positions = [];
   }
 
-  public addVertex(x: number, y: number) {
-    this.positions.push([x, y]);
+  public addItem(item: [number, number]) {
+    this.positions.push(item);
   }
 
-  public addVertices(vertices: [number, number][]) {
-    this.positions = this.positions.concat(vertices);
+  public addItems(items: [number, number][]) {
+    this.positions = this.positions.concat(items);
   }
 
-  public commit(shaderProgram : ShaderProgram) {
-
+  public bufferData() {
     this.gl.bufferData(
       this.gl.ARRAY_BUFFER,
-      new Float32Array(this.positions.flat()),
+      new Uint32Array(this.positions.flat()),
       this.gl.STATIC_DRAW
     );
+  }
 
-    const numComponents = 2; // pull out 2 values per iteration
-    const type = this.gl.FLOAT; // the data in the buffer is 32bit floats
-    const normalize = false; // don't normalize
-    const stride = 0; // how many bytes to get from one set of values to the next
-    // 0 = use type and numComponents above
-    const offset = 0; // how many bytes inside the buffer to start from
+  public bind() {
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffer);
-    this.gl.vertexAttribPointer(
-      shaderProgram.getVertexPositions(),
-      numComponents,
-      type,
-      normalize,
-      stride,
-      offset
-    );
+  }
 
+  public getLayout() {
+    return {
+      numComponents: 2,
+      type: this.gl.FLOAT,
+      normalize: false,
+      stride: 0,
+      offset: 0,
+    };
   }
 
   public getSize() {
@@ -52,6 +47,10 @@ export class VertexBuffer {
   }
 
   public getBuffer() {
-      return this.buffer;
+    return this.buffer;
+  }
+
+  public getAttribName() {
+    return "aVertexPosition";
   }
 }

@@ -1,5 +1,5 @@
-export const vertexShaderSource = `
-attribute vec4 aVertexPosition;
+export const vertexShaderSource = `#version 300 es
+in vec4 aVertexPosition;
 
 uniform mat4 uModelViewMatrix;
 uniform mat4 uProjectionMatrix;

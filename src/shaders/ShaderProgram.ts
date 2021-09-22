@@ -1,12 +1,10 @@
-import { Canvas } from "../canvas/Canvas";
-
 export class ShaderProgram {
   private program: WebGLProgram;
   private gl: WebGLRenderingContext;
   private shaders: WebGLShader[];
 
-  constructor(canvas: Canvas) {
-    this.gl = canvas.getWebGL();
+  constructor(gl: WebGLRenderingContext) {
+    this.gl = gl;
     this.program = this.gl.createProgram();
     this.shaders = [];
   }
@@ -14,6 +12,7 @@ export class ShaderProgram {
   public addShader(shaderType: number, shaderSource: string): void {
     const shader = this.gl.createShader(shaderType);
     this.gl.shaderSource(shader, shaderSource);
+    // Turns the shader string into binary data
     this.gl.compileShader(shader);
 
     if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
@@ -30,6 +29,9 @@ export class ShaderProgram {
   }
 
   public link(): void {
+    // identifies attribute and uniform names and defines an index for each where the
+    // respective buffers containing the values for these attributes and uniforms will be
+    // expected on the vertex array object
     this.gl.linkProgram(this.program);
 
     if (!this.gl.getProgramParameter(this.program, this.gl.LINK_STATUS)) {
@@ -38,16 +40,33 @@ export class ShaderProgram {
           this.gl.getProgramInfoLog(this.program)
       );
     }
-    console.log("Shader program linked successfully");
-
-    this.gl.useProgram(this.program);
+    console.log(
+      "Shader program linked successfully: ",
+      this.gl.getActiveUniform(this.program, 0),
+      this.gl.getActiveUniform(this.program, 1)
+    );
   }
 
   public getProgram() {
     return this.program;
   }
 
-  public getVertexPositions() {
-      return this.gl.getAttribLocation(this.program, 'aVertexPosition');
+  public useProgram() {
+    this.gl.useProgram(this.program);
+  }
+
+  public getAttribLocation(name: string) {
+    return this.gl.getAttribLocation(this.program, name);
+  }
+
+  public setUniform(name: string, data: Float32List, transpose?: boolean) {
+    var location = this.gl.getUniformLocation(this.program, name);
+    console.log(
+      `Location of ${name}: `,
+      location,
+      this.gl.getActiveUniform(this.program, 0),
+      this.gl.getActiveUniform(this.program, 1)
+    );
+    this.gl.uniformMatrix4fv(location, transpose ?? false, data);
   }
 }
