@@ -23,7 +23,7 @@ export class VertexBuffer implements CustomBuffer<[number, number]> {
   public bufferData() {
     this.gl.bufferData(
       this.gl.ARRAY_BUFFER,
-      new Uint32Array(this.positions.flat()),
+      new Float32Array(this.positions.flat()),
       this.gl.STATIC_DRAW
     );
   }

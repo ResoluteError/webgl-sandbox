@@ -46,12 +46,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Setup Shader Program
     const shaderProgram = new ShaderProgram(gl);
+
     shaderProgram.addShader(gl.VERTEX_SHADER, vertexShaderSource);
     shaderProgram.addShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
     shaderProgram.link();
-
-    // Setup Vertex Array Object and bind it
-    var vao = new VertexArrayObject(gl);
 
     // Create the Vertex and Index Buffers and bind them
     const vertexBuffer = new VertexBuffer(gl);
@@ -65,6 +63,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Actually buffer the data to the GPU
     vertexBuffer.bufferData();
+
+    // Setup Vertex Array Object and bind it
+    var vao = new VertexArrayObject(gl);
     VertexArrayObject.enableVertexAttribArray(gl, vertexBuffer, shaderProgram);
 
     const indexBuffer = new IndexBuffer(gl);

@@ -24,7 +24,7 @@ export class VertexArrayObject {
       buffer.getAttribName() as string
     );
 
-    console.log(`BufferIndex at: `, bufferIndex);
+    console.log(`BufferIndex of ${buffer.getAttribName()} at: `, bufferIndex);
 
     buffer.bind();
     gl.enableVertexAttribArray(bufferIndex);
