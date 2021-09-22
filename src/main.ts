@@ -66,7 +66,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Setup Vertex Array Object and bind it
     var vao = new VertexArrayObject(gl);
-    VertexArrayObject.enableVertexAttribArray(gl, vertexBuffer, shaderProgram);
+    vao.enableVertexAttribArray(vertexBuffer, shaderProgram);
+    vao.setVertexAttribPoints(vertexBuffer, shaderProgram);
 
     const indexBuffer = new IndexBuffer(gl);
     indexBuffer.addItems([0, 1, 2, 2, 3, 4, 0, 4, 5]);
@@ -100,6 +101,26 @@ document.addEventListener("DOMContentLoaded", function () {
       gl.UNSIGNED_INT,
       offset
     );
+
+    vertexBuffer.bind();
+    vertexBuffer.scaleAllVerticesAroundCenter(0.5);
+
+    [
+      [2.5, 1],
+      [-5, 0],
+      [0, -2],
+      [5, 0],
+    ].map(([x, y]) => {
+      vertexBuffer.moveAllVerticesBy(x, y);
+      vertexBuffer.bufferData();
+
+      gl.drawElements(
+        gl.TRIANGLES,
+        indexBuffer.getSize(),
+        gl.UNSIGNED_INT,
+        offset
+      );
+    });
   } catch (err) {
     console.error(err);
   }

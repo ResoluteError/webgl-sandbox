@@ -16,6 +16,26 @@ export class VertexBuffer implements CustomBuffer<[number, number]> {
     this.positions.push(item);
   }
 
+  public moveAllVerticesBy(x: number, y: number) {
+    this.positions = this.positions.map(([cx, cy]) => [cx + x, cy + y]);
+  }
+
+  public scaleAllVerticesAroundCenter(factor: number) {
+    console.log(this.positions);
+    let [totalX, totalY] = this.positions.reduceRight((prev, cur) => [
+      prev[0] + cur[0],
+      prev[1] + cur[1],
+    ]);
+    console.log(`totalX: ${totalX} | totaly: ${totalY}`);
+    let centerX = totalX / this.positions.length;
+    let centerY = totalY / this.positions.length;
+    console.log(`centerX: ${centerX} | centerY: ${centerY}`);
+    this.positions = this.positions.map(([x, y]) => [
+      centerX + (x - centerX) * factor,
+      centerY + (y - centerY) * factor,
+    ]);
+  }
+
   public addItems(items: [number, number][]) {
     this.positions = this.positions.concat(items);
   }

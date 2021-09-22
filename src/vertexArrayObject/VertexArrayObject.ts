@@ -15,8 +15,11 @@ export class VertexArrayObject {
     this.gl.bindVertexArray(this.vao);
   }
 
-  public static enableVertexAttribArray(
-    gl: WebGL2RenderingContext,
+  /**
+   * This will enable the VertexArayObject at the index that is expected by the ShaderProgram for a
+   * given attribute. When working with multiple programs, this needs to be re-enabled between program switches.
+   */
+  public enableVertexAttribArray(
     buffer: CustomBuffer<any>,
     shaderProgram: ShaderProgram
   ) {
@@ -24,12 +27,23 @@ export class VertexArrayObject {
       buffer.getAttribName() as string
     );
 
-    console.log(`BufferIndex of ${buffer.getAttribName()} at: `, bufferIndex);
-
     buffer.bind();
-    gl.enableVertexAttribArray(bufferIndex);
+    this.gl.enableVertexAttribArray(bufferIndex);
+  }
+
+  /**
+   * This will define the layout of the provided Buffer, e.g. for vertex positions or normals.
+   */
+  public setVertexAttribPoints(
+    buffer: CustomBuffer<any>,
+    shaderProgram: ShaderProgram
+  ) {
+    var bufferIndex = shaderProgram.getAttribLocation(
+      buffer.getAttribName() as string
+    );
+
     var { numComponents, type, normalize, stride, offset } = buffer.getLayout();
-    gl.vertexAttribPointer(
+    this.gl.vertexAttribPointer(
       bufferIndex,
       numComponents,
       type,
