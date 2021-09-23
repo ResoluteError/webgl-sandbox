@@ -6,21 +6,29 @@ import { vertexShaderSource } from "../resources/shaders/vertexShader.source";
 import { ProjectionMatrix } from "./matrices/ProjectionMatrix";
 import { ModelViewMatrix } from "./matrices/ModelViewMatrix";
 import { VertexArrayObject } from "./vertexArrayObject/VertexArrayObject";
+import {
+  scale2DAroundCenterProvider,
+  translate2DProvider,
+} from "./matrices/utils/2dUtils";
+import { VertexBufferLayout } from "./buffers/VertexBufferLayout";
 
-function setupCanvas(clientHeight: number, clientWidth: number) {
+function setupCanvas(
+  clientHeight: number,
+  clientWidth: number
+): HTMLCanvasElement {
   const canvasEle = document.getElementById("glcanvas") as HTMLCanvasElement;
   canvasEle.setAttribute("height", `${clientHeight}`);
   canvasEle.setAttribute("width", `${clientWidth}`);
   return canvasEle;
 }
 
-function setupGl(gl: WebGL2RenderingContext) {
+function setupGl(gl: WebGL2RenderingContext): void {
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
   gl.enable(gl.DEPTH_TEST);
   gl.depthFunc(gl.LEQUAL);
 }
 
-function clearCanvas(gl: WebGL2RenderingContext) {
+function clearCanvas(gl: WebGL2RenderingContext): void {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 }
 
@@ -51,23 +59,28 @@ document.addEventListener("DOMContentLoaded", function () {
     shaderProgram.addShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
     shaderProgram.link();
 
+    // Setup Vertex Array Object and bind it
+    var vao = new VertexArrayObject(gl);
+    var vertexBufferLayout = new VertexBufferLayout(gl, shaderProgram);
+
     // Create the Vertex and Index Buffers and bind them
-    const vertexBuffer = new VertexBuffer(gl);
+    const vertexBuffer = new VertexBuffer<[number, number]>(gl);
+    vertexBufferLayout.push(gl.FLOAT, 2, 0, "aVertexPosition");
+
     // Add data to the VertexBuffer
-    vertexBuffer.addItem([-1, 0.5]);
-    vertexBuffer.addItem([-0.5, 1]);
-    vertexBuffer.addItem([0, 0.5]);
-    vertexBuffer.addItem([0.5, 1]);
-    vertexBuffer.addItem([1, 0.5]);
-    vertexBuffer.addItem([0, -1]);
+    vertexBuffer.addItems([
+      [-1, 0.5],
+      [-0.5, 1],
+      [0, 0.5],
+      [0.5, 1],
+      [1, 0.5],
+      [0, -1],
+    ]);
 
     // Actually buffer the data to the GPU
     vertexBuffer.bufferData();
 
-    // Setup Vertex Array Object and bind it
-    var vao = new VertexArrayObject(gl);
-    vao.enableVertexAttribArray(vertexBuffer, shaderProgram);
-    vao.setVertexAttribPoints(vertexBuffer, shaderProgram);
+    vao.addBuffer(vertexBuffer, vertexBufferLayout);
 
     const indexBuffer = new IndexBuffer(gl);
     indexBuffer.addItems([0, 1, 2, 2, 3, 4, 0, 4, 5]);
@@ -103,7 +116,7 @@ document.addEventListener("DOMContentLoaded", function () {
     );
 
     vertexBuffer.bind();
-    vertexBuffer.scaleAllVerticesAroundCenter(0.5);
+    vertexBuffer.updateItems(scale2DAroundCenterProvider(0.5));
 
     [
       [2.5, 1],
@@ -111,7 +124,7 @@ document.addEventListener("DOMContentLoaded", function () {
       [0, -2],
       [5, 0],
     ].map(([x, y]) => {
-      vertexBuffer.moveAllVerticesBy(x, y);
+      vertexBuffer.updateItems(translate2DProvider(x, y));
       vertexBuffer.bufferData();
 
       gl.drawElements(

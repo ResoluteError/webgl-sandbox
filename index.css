@@ -1,10 +1,12 @@
 body {
+  margin: 0px;
+  padding: 0px;
+}
 
-    margin: 0px;
-    padding: 0px;
-
+html {
+  background-color: black;
 }
 
 canvas {
-    margin: 0px;
+  margin: 0px;
 }

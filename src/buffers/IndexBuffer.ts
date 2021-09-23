@@ -32,14 +32,12 @@ export class IndexBuffer implements CustomBuffer<number> {
     this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.buffer);
   }
 
-  public getLayout() {
-    return {
-      numComponents: 2,
-      type: this.gl.FLOAT,
-      normalize: false,
-      stride: 0,
-      offset: 0,
-    };
+  public unbind() {
+    this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, null);
+  }
+
+  public delete() {
+    this.gl.deleteBuffer(this.buffer);
   }
 
   public getSize() {
@@ -48,11 +46,5 @@ export class IndexBuffer implements CustomBuffer<number> {
 
   public getBuffer() {
     return this.buffer;
-  }
-
-  public getAttribName() {
-    throw new Error(
-      "IndexBuffer is not linked to an attribute and stored directly on the VAO instead"
-    );
   }
 }

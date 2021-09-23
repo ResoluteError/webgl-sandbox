@@ -2,11 +2,13 @@ export class ShaderProgram {
   private program: WebGLProgram;
   private gl: WebGLRenderingContext;
   private shaders: WebGLShader[];
+  private uniformLocationMemo: { [key: string]: WebGLUniformLocation };
 
   constructor(gl: WebGLRenderingContext) {
     this.gl = gl;
     this.program = this.gl.createProgram();
     this.shaders = [];
+    this.uniformLocationMemo = {};
   }
 
   public addShader(shaderType: number, shaderSource: string): void {
@@ -40,6 +42,9 @@ export class ShaderProgram {
           this.gl.getProgramInfoLog(this.program)
       );
     }
+
+    this.shaders.map((shader) => this.gl.deleteShader(shader));
+    this.shaders = [];
   }
 
   public getProgram() {
@@ -55,7 +60,13 @@ export class ShaderProgram {
   }
 
   public setUniform(name: string, data: Float32List, transpose?: boolean) {
-    var location = this.gl.getUniformLocation(this.program, name);
+    if (!this.uniformLocationMemo[name]) {
+      this.uniformLocationMemo[name] = this.gl.getUniformLocation(
+        this.program,
+        name
+      );
+    }
+    var location = this.uniformLocationMemo[name];
     this.gl.uniformMatrix4fv(location, transpose ?? false, data);
   }
 }

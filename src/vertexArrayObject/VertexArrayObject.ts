@@ -1,4 +1,5 @@
-import { CustomBuffer } from "../buffers/Buffer.interface";
+import { CustomVertexBuffer } from "../buffers/Buffer.interface";
+import { VertexBufferLayout } from "../buffers/VertexBufferLayout";
 import { ShaderProgram } from "../shaders/ShaderProgram";
 
 export class VertexArrayObject {
@@ -16,40 +17,24 @@ export class VertexArrayObject {
   }
 
   /**
-   * This will enable the VertexArayObject at the index that is expected by the ShaderProgram for a
-   * given attribute. When working with multiple programs, this needs to be re-enabled between program switches.
-   */
-  public enableVertexAttribArray(
-    buffer: CustomBuffer<any>,
-    shaderProgram: ShaderProgram
-  ) {
-    var bufferIndex = shaderProgram.getAttribLocation(
-      buffer.getAttribName() as string
-    );
-
-    buffer.bind();
-    this.gl.enableVertexAttribArray(bufferIndex);
-  }
-
-  /**
    * This will define the layout of the provided Buffer, e.g. for vertex positions or normals.
    */
-  public setVertexAttribPoints(
-    buffer: CustomBuffer<any>,
-    shaderProgram: ShaderProgram
+  public addBuffer(
+    buffer: CustomVertexBuffer<any>,
+    vertexBufferLayot: VertexBufferLayout
   ) {
-    var bufferIndex = shaderProgram.getAttribLocation(
-      buffer.getAttribName() as string
-    );
+    buffer.bind();
 
-    var { numComponents, type, normalize, stride, offset } = buffer.getLayout();
-    this.gl.vertexAttribPointer(
-      bufferIndex,
-      numComponents,
-      type,
-      normalize,
-      stride,
-      offset
-    );
+    vertexBufferLayot.getElements().forEach((elementLayout) => {
+      this.gl.enableVertexAttribArray(elementLayout.index);
+      this.gl.vertexAttribPointer(
+        elementLayout.index,
+        elementLayout.numComponents,
+        elementLayout.type,
+        elementLayout.normalize,
+        elementLayout.stride,
+        elementLayout.offset
+      );
+    });
   }
 }

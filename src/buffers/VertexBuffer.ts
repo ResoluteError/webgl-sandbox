@@ -1,49 +1,33 @@
-import { CustomBuffer } from "./Buffer.interface";
+import { CustomVertexBuffer } from "./Buffer.interface";
 
-export class VertexBuffer implements CustomBuffer<[number, number]> {
+export class VertexBuffer<T extends number[]> implements CustomVertexBuffer<T> {
   private gl: WebGL2RenderingContext;
   private buffer: WebGLBuffer;
-  private positions: [number, number][];
+  private items: T[];
 
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl;
     this.buffer = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffer);
-    this.positions = [];
+    this.items = [];
   }
 
-  public addItem(item: [number, number]) {
-    this.positions.push(item);
+  public addItem(item: T) {
+    this.items.push(item);
   }
 
-  public moveAllVerticesBy(x: number, y: number) {
-    this.positions = this.positions.map(([cx, cy]) => [cx + x, cy + y]);
+  public addItems(items: T[]) {
+    this.items = this.items.concat(items);
   }
 
-  public scaleAllVerticesAroundCenter(factor: number) {
-    console.log(this.positions);
-    let [totalX, totalY] = this.positions.reduceRight((prev, cur) => [
-      prev[0] + cur[0],
-      prev[1] + cur[1],
-    ]);
-    console.log(`totalX: ${totalX} | totaly: ${totalY}`);
-    let centerX = totalX / this.positions.length;
-    let centerY = totalY / this.positions.length;
-    console.log(`centerX: ${centerX} | centerY: ${centerY}`);
-    this.positions = this.positions.map(([x, y]) => [
-      centerX + (x - centerX) * factor,
-      centerY + (y - centerY) * factor,
-    ]);
-  }
-
-  public addItems(items: [number, number][]) {
-    this.positions = this.positions.concat(items);
+  public updateItems(updateFn: (input: T[]) => T[]) {
+    this.items = updateFn(this.items);
   }
 
   public bufferData() {
     this.gl.bufferData(
       this.gl.ARRAY_BUFFER,
-      new Float32Array(this.positions.flat()),
+      new Float32Array(this.items.flat() as number[]),
       this.gl.STATIC_DRAW
     );
   }
@@ -52,25 +36,19 @@ export class VertexBuffer implements CustomBuffer<[number, number]> {
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffer);
   }
 
-  public getLayout() {
-    return {
-      numComponents: 2,
-      type: this.gl.FLOAT,
-      normalize: false,
-      stride: 0,
-      offset: 0,
-    };
+  public unbind() {
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
+  }
+
+  public delete() {
+    this.gl.deleteBuffer(this.buffer);
   }
 
   public getSize() {
-    return this.positions.length;
+    return this.items.length;
   }
 
   public getBuffer() {
     return this.buffer;
-  }
-
-  public getAttribName() {
-    return "aVertexPosition";
   }
 }
