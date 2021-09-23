@@ -60,6 +60,8 @@ export class ShaderProgram {
   }
 
   public setUniform(name: string, data: Float32List, transpose?: boolean) {
+    this.gl.useProgram(this.program);
+
     if (!this.uniformLocationMemo[name]) {
       this.uniformLocationMemo[name] = this.gl.getUniformLocation(
         this.program,

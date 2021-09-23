@@ -24,6 +24,10 @@ export class VertexBuffer<T extends number[]> implements CustomVertexBuffer<T> {
     this.items = updateFn(this.items);
   }
 
+  public replaceItems(newItems: T[]) {
+    this.items = newItems;
+  }
+
   public bufferData() {
     this.gl.bufferData(
       this.gl.ARRAY_BUFFER,

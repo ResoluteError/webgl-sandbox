@@ -22,6 +22,8 @@ function setupCanvas(): HTMLCanvasElement {
 
 document.addEventListener("DOMContentLoaded", function () {
   const canvasEle = setupCanvas();
+  const maxFps = 60;
+  const maxMSpF = 1000 / maxFps;
 
   const projectionMatrix = new ProjectionMatrix(
     window.innerHeight,
@@ -30,6 +32,14 @@ document.addEventListener("DOMContentLoaded", function () {
   );
   const modelViewMatrix = new ModelViewMatrix();
   modelViewMatrix.translate(0.0, 0.0, -5.0);
+  const basicHeart: [number, number][] = [
+    [-1, 0.5],
+    [-0.5, 1],
+    [0, 0.5],
+    [0.5, 1],
+    [1, 0.5],
+    [0, -1],
+  ];
 
   try {
     const gl: WebGL2RenderingContext = canvasEle.getContext("webgl2");
@@ -53,14 +63,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const vertexBuffer = new VertexBuffer<[number, number]>(gl);
 
     // Add data to the VertexBuffer
-    vertexBuffer.addItems([
-      [-1, 0.5],
-      [-0.5, 1],
-      [0, 0.5],
-      [0.5, 1],
-      [1, 0.5],
-      [0, -1],
-    ]);
+    vertexBuffer.addItems(basicHeart);
 
     // Actually buffer the data to the GPU
     vertexBuffer.bufferData();
@@ -74,12 +77,8 @@ document.addEventListener("DOMContentLoaded", function () {
     indexBuffer.bufferData();
 
     // Starting here is the draw loop per frame
-    renderer.clear();
 
     // Starting here is the draw loop per program
-    shaderProgram.useProgram();
-
-    vao.bind();
 
     shaderProgram.setUniform(
       projectionMatrix.getUniformName(),
@@ -93,20 +92,40 @@ document.addEventListener("DOMContentLoaded", function () {
       false
     );
 
-    [
-      [0, 0],
-      [2.5, 1],
-      [-5, 0],
-      [0, -2],
-      [5, 0],
-    ].forEach(([x, y], index) => {
-      if (index === 1)
-        vertexBuffer.updateItems(scale2DAroundCenterProvider(0.5));
-      vertexBuffer.updateItems(translate2DProvider(x, y));
-      vertexBuffer.bufferData();
+    var previousTimeStamp = 0;
 
-      renderer.draw(vao, shaderProgram, indexBuffer);
-    });
+    const gameLoop = (timestamp: number) => {
+      const timeSinceLastFrame = previousTimeStamp - timestamp;
+
+      const startTime = Date.now();
+      renderer.clear();
+
+      [
+        [0, 0],
+        [2.5, 1],
+        [-5, 0],
+        [0, -2],
+        [5, 0],
+      ].forEach(([x, y], index) => {
+        if (index === 1)
+          vertexBuffer.updateItems(scale2DAroundCenterProvider(0.5));
+        vertexBuffer.updateItems(translate2DProvider(x, y));
+        vertexBuffer.bufferData();
+
+        renderer.draw(vao, shaderProgram, indexBuffer);
+      });
+      vertexBuffer.replaceItems(basicHeart);
+      previousTimeStamp = timestamp;
+      const waitTime = maxMSpF - (Date.now() - startTime);
+      window.setTimeout(
+        () => {
+          window.requestAnimationFrame(gameLoop);
+        },
+        waitTime > 0 ? waitTime : 0
+      );
+    };
+
+    window.requestAnimationFrame(gameLoop);
   } catch (err) {
     console.error(err);
   }

@@ -30,8 +30,8 @@ export class Renderer {
     shader: ShaderProgram,
     indexBuffer: IndexBuffer
   ) {
-    vao.bind();
     shader.useProgram();
+    vao.bind();
     indexBuffer.bind();
     this.gl.drawElements(
       this.gl.TRIANGLES,
