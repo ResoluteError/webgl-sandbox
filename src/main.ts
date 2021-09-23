@@ -11,46 +11,32 @@ import {
   translate2DProvider,
 } from "./matrices/utils/2dUtils";
 import { VertexBufferLayout } from "./buffers/VertexBufferLayout";
+import { Renderer } from "./renderer/Renderer";
 
-function setupCanvas(
-  clientHeight: number,
-  clientWidth: number
-): HTMLCanvasElement {
+function setupCanvas(): HTMLCanvasElement {
   const canvasEle = document.getElementById("glcanvas") as HTMLCanvasElement;
-  canvasEle.setAttribute("height", `${clientHeight}`);
-  canvasEle.setAttribute("width", `${clientWidth}`);
+  canvasEle.setAttribute("height", `${window.innerHeight}`);
+  canvasEle.setAttribute("width", `${window.innerWidth}`);
   return canvasEle;
 }
 
-function setupGl(gl: WebGL2RenderingContext): void {
-  gl.clearColor(0.0, 0.0, 0.0, 1.0);
-  gl.enable(gl.DEPTH_TEST);
-  gl.depthFunc(gl.LEQUAL);
-}
-
-function clearCanvas(gl: WebGL2RenderingContext): void {
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-}
-
 document.addEventListener("DOMContentLoaded", function () {
-  const clientHeight = window.innerHeight;
-  const clientWidth = window.innerWidth;
-  const canvasEle = setupCanvas(clientHeight, clientWidth);
+  const canvasEle = setupCanvas();
 
-  const projectionMatrix = new ProjectionMatrix(clientHeight, clientWidth, {});
+  const projectionMatrix = new ProjectionMatrix(
+    window.innerHeight,
+    window.innerWidth,
+    {}
+  );
   const modelViewMatrix = new ModelViewMatrix();
   modelViewMatrix.translate(0.0, 0.0, -5.0);
 
   try {
     const gl: WebGL2RenderingContext = canvasEle.getContext("webgl2");
 
-    if (!gl) {
-      throw new Error(
-        "Unable to initialize WebGL. Your browser or machine may not support it."
-      );
-    }
+    const renderer = new Renderer(gl);
 
-    setupGl(gl);
+    renderer.setup(0.0, 0.0, 0.0, 1.0);
 
     // Setup Shader Program
     const shaderProgram = new ShaderProgram(gl);
@@ -65,7 +51,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Create the Vertex and Index Buffers and bind them
     const vertexBuffer = new VertexBuffer<[number, number]>(gl);
-    vertexBufferLayout.push(gl.FLOAT, 2, 0, "aVertexPosition");
 
     // Add data to the VertexBuffer
     vertexBuffer.addItems([
@@ -80,6 +65,8 @@ document.addEventListener("DOMContentLoaded", function () {
     // Actually buffer the data to the GPU
     vertexBuffer.bufferData();
 
+    vertexBufferLayout.push(gl.FLOAT, 2, 0, "aVertexPosition");
+
     vao.addBuffer(vertexBuffer, vertexBufferLayout);
 
     const indexBuffer = new IndexBuffer(gl);
@@ -87,7 +74,7 @@ document.addEventListener("DOMContentLoaded", function () {
     indexBuffer.bufferData();
 
     // Starting here is the draw loop per frame
-    clearCanvas(gl);
+    renderer.clear();
 
     // Starting here is the draw loop per program
     shaderProgram.useProgram();
@@ -106,33 +93,19 @@ document.addEventListener("DOMContentLoaded", function () {
       false
     );
 
-    const offset = 0;
-
-    gl.drawElements(
-      gl.TRIANGLES,
-      indexBuffer.getSize(),
-      gl.UNSIGNED_INT,
-      offset
-    );
-
-    vertexBuffer.bind();
-    vertexBuffer.updateItems(scale2DAroundCenterProvider(0.5));
-
     [
+      [0, 0],
       [2.5, 1],
       [-5, 0],
       [0, -2],
       [5, 0],
-    ].map(([x, y]) => {
+    ].forEach(([x, y], index) => {
+      if (index === 1)
+        vertexBuffer.updateItems(scale2DAroundCenterProvider(0.5));
       vertexBuffer.updateItems(translate2DProvider(x, y));
       vertexBuffer.bufferData();
 
-      gl.drawElements(
-        gl.TRIANGLES,
-        indexBuffer.getSize(),
-        gl.UNSIGNED_INT,
-        offset
-      );
+      renderer.draw(vao, shaderProgram, indexBuffer);
     });
   } catch (err) {
     console.error(err);
