@@ -7,6 +7,11 @@ export class ModelViewMatrix {
     this.modelViewMatrix = mat4.create();
   }
 
+  public set(x: number, y: number, z: number) {
+    this.modelViewMatrix = mat4.create();
+    this.translate(x, y, z);
+  }
+
   public translate(x: number, y: number, z: number) {
     mat4.translate(
       this.modelViewMatrix, // destination matrix

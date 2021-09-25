@@ -1,77 +1,57 @@
-import { ShaderProgram } from "./shaders/ShaderProgram";
-import { fragmentShaderSource } from "../resources/shaders/fragmentShader.source";
-import { vertexShaderSource } from "../resources/shaders/vertexShader.source";
-import { ModelViewMatrix } from "./matrices/ModelViewMatrix";
-import { Renderer } from "./renderer/Renderer";
 import { Object2D } from "./objects/Object2D";
+import { GameLoop } from "./gameLoop/GameLoop";
+import { ShaderProgram } from "./shaders/ShaderProgram";
+import { TranslateAnimation, ZoomAnimation } from "./objects/Animation";
+
+async function getHeart(
+  gl: WebGL2RenderingContext,
+  shaderProgram: ShaderProgram,
+  red: boolean
+) {
+  const heart = new Object2D(gl, shaderProgram);
+  heart.setVertexPositions([
+    [-1.75, 0.5],
+    [-1.25, 1],
+    [-0.75, 0.5],
+    [-0.25, 1],
+    [0.25, 0.5],
+    [-0.75, -1],
+  ]);
+  await heart.setImageTexture(
+    red ? "/resources/textures/red.jpeg" : "/resources/textures/blue.jpeg"
+  );
+  heart.setIndex([0, 1, 2, 2, 3, 4, 0, 4, 5]);
+  return heart;
+}
 
 document.addEventListener("DOMContentLoaded", async function () {
-  const maxFps = 1;
-  const maxMSpF = 1000 / maxFps;
-
   const canvasEle = document.getElementById("glcanvas") as HTMLCanvasElement;
-
-  const modelViewMatrix = new ModelViewMatrix();
-  modelViewMatrix.translate(0.0, 0.0, -5.0);
-
   try {
-    const gl: WebGL2RenderingContext = canvasEle.getContext("webgl2");
-    const shaderProgram = new ShaderProgram(gl);
-    const renderer = new Renderer(gl);
+    var gameLoop = new GameLoop(60, canvasEle);
 
-    renderer.setup(0.0, 0.0, 0.0, 1.0);
-
-    // Setup Shader Program
-
-    shaderProgram.addShader(gl.VERTEX_SHADER, vertexShaderSource);
-    shaderProgram.addShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
-    shaderProgram.link();
-
-    const heart = new Object2D(gl, shaderProgram);
-    heart.setVertexPositions([
-      [-1, 0.5],
-      [-0.5, 1],
-      [0, 0.5],
-      [0.5, 1],
-      [1, 0.5],
-      [0, -1],
-    ]);
-    await heart.setImageTexture("/resources/textures/red.png");
-    heart.setIndex([0, 1, 2, 2, 3, 4, 0, 4, 5]);
-
-    shaderProgram.setUniformMatrix4fv(
-      modelViewMatrix.getUniformName(),
-      modelViewMatrix.getMatrix(),
+    const redHeart = await getHeart(
+      gameLoop.getGL(),
+      gameLoop.getShaderProgram(),
+      true
+    );
+    const blueHeart = await getHeart(
+      gameLoop.getGL(),
+      gameLoop.getShaderProgram(),
       false
     );
 
-    var previousTimeStamp = 0;
+    redHeart.translate(-3, 0);
+    blueHeart.translate(3, 0);
 
-    const gameLoop = (timestamp: number) => {
-      const startTime = Date.now();
+    redHeart.addAnimation(new TranslateAnimation(1000, 1, 0, 1000));
+    blueHeart.addAnimation(new TranslateAnimation(1000, -1, 0, 1000));
+    redHeart.addAnimation(new ZoomAnimation(1000, 2, 2000));
+    blueHeart.addAnimation(new ZoomAnimation(1000, 2, 2000));
 
-      renderer.clear();
-      renderer.updateWindowSize(
-        window.innerWidth,
-        window.innerHeight,
-        canvasEle,
-        shaderProgram
-      );
+    gameLoop.addObjectToScene(redHeart);
+    gameLoop.addObjectToScene(blueHeart);
 
-      renderer.drawObject(heart);
-
-      previousTimeStamp = timestamp;
-      const waitTime = maxMSpF - (Date.now() - startTime);
-
-      window.setTimeout(
-        () => {
-          window.requestAnimationFrame(gameLoop);
-        },
-        waitTime > 0 ? waitTime : 0
-      );
-    };
-
-    window.requestAnimationFrame(gameLoop);
+    gameLoop.start();
   } catch (err) {
     console.error(err);
   }

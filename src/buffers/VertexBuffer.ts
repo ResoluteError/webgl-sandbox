@@ -20,6 +20,10 @@ export class VertexBuffer<T extends number[]> implements CustomVertexBuffer<T> {
     this.items = this.items.concat(items);
   }
 
+  public getItems() {
+    return this.items;
+  }
+
   public updateItems(updateFn: (input: T[]) => T[]) {
     this.items = updateFn(this.items);
   }
@@ -29,6 +33,7 @@ export class VertexBuffer<T extends number[]> implements CustomVertexBuffer<T> {
   }
 
   public bufferData() {
+    this.bind();
     this.gl.bufferData(
       this.gl.ARRAY_BUFFER,
       new Float32Array(this.items.flat() as number[]),

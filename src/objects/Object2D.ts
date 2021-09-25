@@ -8,6 +8,7 @@ import {
 import { ShaderProgram } from "../shaders/ShaderProgram";
 import { TextureMapper } from "../textures/TextureMapper";
 import { VertexArrayObject } from "../vertexArrayObject/VertexArrayObject";
+import { CustomAnimation } from "./Animation";
 
 export class Object2D {
   private gl: WebGL2RenderingContext;
@@ -22,6 +23,7 @@ export class Object2D {
   private texPositionBufferLayout: VertexBufferLayout;
   private vao: VertexArrayObject;
   private texIndex: number;
+  private animations: CustomAnimation[];
 
   constructor(gl: WebGL2RenderingContext, shaderProgram: ShaderProgram) {
     this.gl = gl;
@@ -29,6 +31,7 @@ export class Object2D {
     this.vertexPositions = [];
     this.shaderProgram = shaderProgram;
     this.texIndex = 0;
+    this.animations = [];
   }
 
   public setVertexPositions(positions: [number, number][]): void {
@@ -60,12 +63,9 @@ export class Object2D {
           "Must specify vertexPositions before pushing texture without specific texCoordsMapper positions!"
         );
       }
-
       texCoordsMapper = TextureMapper.linear2DTexCoordInterpolation(
         this.vertexPositions
       );
-
-      console.log("texCoordsMapper: ", texCoordsMapper);
     }
 
     this.texture = new TextureMapper(this.gl);
@@ -89,6 +89,7 @@ export class Object2D {
       this.vertexPositionsBuffer,
       this.vertexPositionBufferLayout
     );
+    this.texture.bind(this.texIndex);
     this.vao.addBuffer(this.texPositionBuffer, this.texPositionBufferLayout);
     this.indexBuffer.bind();
     this.shaderProgram.setUniform1i("u_Texture", this.texIndex);
@@ -110,5 +111,20 @@ export class Object2D {
     this.vertexPositions = translate2DProvider(x, y)(this.vertexPositions);
     this.vertexPositionsBuffer.replaceItems(this.vertexPositions);
     this.vertexPositionsBuffer.bufferData();
+  }
+
+  public addAnimation(animation: CustomAnimation) {
+    animation.init(this.vertexPositionsBuffer);
+    this.animations.push(animation);
+  }
+
+  public doAfterRender(timestamp: number) {
+    this.animations.forEach((animation, index) => {
+      if (animation)
+        animation.animate(timestamp, () => {
+          this.animations[index] = null;
+          console.log("Done");
+        });
+    });
   }
 }

@@ -1,6 +1,5 @@
 import { CustomVertexBuffer } from "../buffers/Buffer.interface";
 import { VertexBufferLayout } from "../buffers/VertexBufferLayout";
-import { ShaderProgram } from "../shaders/ShaderProgram";
 
 export class VertexArrayObject {
   private gl: WebGL2RenderingContext;

@@ -27,7 +27,6 @@ export class ShaderProgram {
 
     this.shaders.push(shader);
     this.gl.attachShader(this.program, shader);
-    console.log(`Shadder of type ${shaderType} attached successfully`);
   }
 
   public link(): void {
