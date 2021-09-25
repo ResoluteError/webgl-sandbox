@@ -1,9 +1,13 @@
 import { IndexBuffer } from "../buffers/IndexBuffer";
+import { ProjectionMatrix } from "../matrices/ProjectionMatrix";
+import { Object2D } from "../objects/Object2D";
 import { ShaderProgram } from "../shaders/ShaderProgram";
 import { VertexArrayObject } from "../vertexArrayObject/VertexArrayObject";
 
 export class Renderer {
   private gl: WebGL2RenderingContext;
+  private prevWidth: number;
+  private prevHeight: number;
 
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl;
@@ -18,6 +22,9 @@ export class Renderer {
   public setup(r: number, g: number, b: number, alpha: number) {
     this.gl.clearColor(r, g, b, alpha);
     this.gl.enable(this.gl.DEPTH_TEST);
+    this.gl.enable(this.gl.BLEND);
+    this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
+    this.gl.blendEquation(this.gl.FUNC_ADD);
     this.gl.depthFunc(this.gl.LEQUAL);
   }
 
@@ -39,5 +46,40 @@ export class Renderer {
       this.gl.UNSIGNED_INT,
       0
     );
+  }
+
+  public drawObject(obj: Object2D) {
+    obj.bind();
+    this.gl.drawElements(
+      this.gl.TRIANGLES,
+      obj.getIndexBufferSize(),
+      this.gl.UNSIGNED_INT,
+      0
+    );
+  }
+
+  public updateWindowSize(
+    width: number,
+    height: number,
+    canvasElement: HTMLCanvasElement,
+    shaderProgram: ShaderProgram
+  ) {
+    if (width !== this.prevWidth || height !== this.prevHeight) {
+      this.prevHeight = height;
+      this.prevWidth = width;
+
+      canvasElement.setAttribute("height", `${height}`);
+      canvasElement.setAttribute("width", `${width}`);
+
+      this.gl.viewport(0, 0, window.innerWidth, window.innerHeight);
+
+      const projectionMatrix = new ProjectionMatrix(height, width, {});
+
+      shaderProgram.setUniformMatrix4fv(
+        projectionMatrix.getUniformName(),
+        projectionMatrix.getMatrix(),
+        false
+      );
+    }
   }
 }

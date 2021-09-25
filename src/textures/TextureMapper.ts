@@ -6,15 +6,11 @@ export class TextureMapper {
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl;
     this.texture = this.gl.createTexture();
+    this.image = new Image();
   }
 
-  public async createImageTexture(
-    imagePath: string,
-    width: number,
-    height: number
-  ): Promise<void> {
+  public async createImageTexture(imagePath: string): Promise<void> {
     return new Promise((res) => {
-      this.image = new Image(width, height);
       this.image.src = imagePath;
       this.image.onload = () => {
         this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);
@@ -61,5 +57,26 @@ export class TextureMapper {
 
   public unbind(): void {
     this.gl.bindTexture(this.gl.TEXTURE_2D, null);
+  }
+
+  public static linear2DTexCoordInterpolation(
+    vertexCoords: [number, number][]
+  ): [number, number][] {
+    let minX: number, minY: number, maxX: number, maxY: number;
+
+    vertexCoords.forEach(([x, y]) => {
+      if (minX === undefined || x < minX) minX = x;
+      if (maxX === undefined || x > maxX) maxX = x;
+      if (minY === undefined || y < minY) minY = y;
+      if (maxY === undefined || y > maxY) maxY = y;
+    });
+
+    const diffX = maxX - minX;
+    const diffY = maxY - minY;
+
+    return vertexCoords.map(([x, y]) => [
+      (x - minX) / diffX,
+      (y - minY) / diffY,
+    ]);
   }
 }

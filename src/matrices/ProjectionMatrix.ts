@@ -1,4 +1,4 @@
-import { mat4 } from "gl-matrix";
+import { mat4, vec4 } from "gl-matrix";
 
 export type ProjectionMatrixProps = Partial<{
   fieldOfView: number; // in radians
@@ -19,7 +19,7 @@ export class ProjectionMatrix {
     clientWidth: number,
     { fieldOfView, aspect, zNear, zFar }: ProjectionMatrixProps
   ) {
-    this.fieldOfView = fieldOfView ?? (45 * Math.PI) / 180;
+    this.fieldOfView = fieldOfView ?? (90 * Math.PI) / 180;
     this.aspect = aspect ?? clientWidth / clientHeight;
     this.zNear = zNear ?? 0.1;
     this.zFar = zFar ?? 100.0;
