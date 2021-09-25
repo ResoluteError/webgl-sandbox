@@ -14,26 +14,27 @@ export class VertexBufferLayout {
 
   public push(
     type: number,
-    numComponents: number,
+    totalElementCount: number,
+    relevantElementCount: number,
     offset: number,
     attributeName: string
   ) {
     const index = this.shaderProgram.getAttribLocation(attributeName);
-    let stride: number;
+    let baseSize = 0;
     switch (type) {
       case this.gl.FLOAT:
-        stride = numComponents * 4;
+        baseSize = 4;
         break;
       case this.gl.UNSIGNED_INT:
-        stride = numComponents * 4;
+        baseSize = 4;
         break;
     }
     this.layoutElements.push({
       index,
-      numComponents,
-      stride,
+      size: relevantElementCount,
+      stride: baseSize * totalElementCount,
       type,
-      offset,
+      offset: offset * baseSize,
       normalize: false,
     });
   }

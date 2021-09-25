@@ -29,7 +29,7 @@ export class VertexArrayObject {
       this.gl.enableVertexAttribArray(elementLayout.index);
       this.gl.vertexAttribPointer(
         elementLayout.index,
-        elementLayout.numComponents,
+        elementLayout.size,
         elementLayout.type,
         elementLayout.normalize,
         elementLayout.stride,

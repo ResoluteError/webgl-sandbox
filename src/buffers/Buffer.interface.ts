@@ -12,7 +12,7 @@ export interface CustomBuffer<T> {
 }
 export type VertexLayoutElement = {
   index: number;
-  numComponents: number; // pull out 2 values per iteration
+  size: number; // pull out 2 values per iteration
   type: number; // the data in the buffer is 32bit floats (WebGLEnum)
   normalize: boolean; // don't normalize
   stride: number; // how many bytes to get from one set of values to the next

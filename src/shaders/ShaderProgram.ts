@@ -59,16 +59,34 @@ export class ShaderProgram {
     return this.gl.getAttribLocation(this.program, name);
   }
 
-  public setUniform(name: string, data: Float32List, transpose?: boolean) {
-    this.gl.useProgram(this.program);
-
+  private getUniformLocation(name: string) {
     if (!this.uniformLocationMemo[name]) {
       this.uniformLocationMemo[name] = this.gl.getUniformLocation(
         this.program,
         name
       );
     }
-    var location = this.uniformLocationMemo[name];
+    return this.uniformLocationMemo[name];
+  }
+
+  public setUniformMatrix4fv(
+    name: string,
+    data: Float32List,
+    transpose?: boolean
+  ) {
+    var location = this.getUniformLocation(name);
+    this.gl.useProgram(this.program);
+
     this.gl.uniformMatrix4fv(location, transpose ?? false, data);
+  }
+
+  public setUniform1i(name: string, data: number) {
+    var location = this.getUniformLocation(name);
+
+    if (typeof data !== "number" || data % 1 !== 0) {
+      throw new Error(`setUniform1i: data ${data} is not of type INT`);
+    }
+
+    this.gl.uniform1i(location, data);
   }
 }
