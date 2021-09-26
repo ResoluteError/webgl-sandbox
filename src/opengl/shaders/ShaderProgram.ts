@@ -1,3 +1,5 @@
+import { vec3 } from "gl-matrix";
+
 export class ShaderProgram {
   private program: WebGLProgram;
   private gl: WebGLRenderingContext;
@@ -18,11 +20,11 @@ export class ShaderProgram {
     this.gl.compileShader(shader);
 
     if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
-      this.gl.deleteShader(shader);
-      throw new Error(
+      var err =
         "An error occurred compiling the shaders: " +
-          this.gl.getShaderInfoLog(shader)
-      );
+        this.gl.getShaderInfoLog(shader);
+      this.gl.deleteShader(shader);
+      throw new Error(err);
     }
 
     this.shaders.push(shader);
@@ -87,5 +89,11 @@ export class ShaderProgram {
     }
 
     this.gl.uniform1i(location, data);
+  }
+
+  public setUniform3f(name: string, data: vec3) {
+    var location = this.getUniformLocation(name);
+
+    this.gl.uniform3f(location, data[0], data[1], data[2]);
   }
 }

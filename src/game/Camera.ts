@@ -1,4 +1,4 @@
-import { ModelViewMatrix } from "../opengl/matrices/ModelViewMatrix";
+import { ViewMatrix } from "../opengl/matrices/ViewMatrix";
 import { ProjectionMatrix } from "../opengl/matrices/ProjectionMatrix";
 import { ShaderProgram } from "../opengl/shaders/ShaderProgram";
 
@@ -14,7 +14,7 @@ export enum CAMERA_ACTION {
 }
 
 export class Camera {
-  modelViewMatrix: ModelViewMatrix;
+  viewMatrix: ViewMatrix;
   projectionMatrix: ProjectionMatrix;
   moveSpeed: number; // change per frame in
   rotateSpeed: number; // change per frame in
@@ -29,8 +29,8 @@ export class Camera {
     startY: number,
     startZ: number
   ) {
-    this.modelViewMatrix = new ModelViewMatrix();
-    this.modelViewMatrix.set(startX, startY, startZ);
+    this.viewMatrix = new ViewMatrix();
+    this.viewMatrix.set(startX, startY, startZ);
     this.projectionMatrix = new ProjectionMatrix(
       window.innerWidth,
       window.innerHeight,
@@ -114,13 +114,13 @@ export class Camera {
           break;
       }
     }
-    this.modelViewMatrix.translate(x, y, z);
+    this.viewMatrix.translate(x, y, z);
   }
 
   public onNextFrame() {
     this.shaderProgram.setUniformMatrix4fv(
-      this.modelViewMatrix.getUniformName(),
-      this.modelViewMatrix.getMatrix(),
+      this.viewMatrix.getUniformName(),
+      this.viewMatrix.getMatrix(),
       false
     );
   }

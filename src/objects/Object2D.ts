@@ -1,14 +1,15 @@
+import { mat4, vec3 } from "gl-matrix";
 import { IndexBuffer } from "../opengl/buffers/IndexBuffer";
 import { VertexBuffer } from "../opengl/buffers/VertexBuffer";
 import { VertexBufferLayout } from "../opengl/buffers/VertexBufferLayout";
-import {
-  scale2DAroundCenterProvider,
-  translate2DProvider,
-} from "../opengl/matrices/utils/2DUtils";
 import { ShaderProgram } from "../opengl/shaders/ShaderProgram";
 import { TextureMapper } from "../opengl/textures/TextureMapper";
 import { VertexArrayObject } from "../opengl/vertexArrayObject/VertexArrayObject";
-import { CustomAnimation } from "./Animation";
+import {
+  CustomAnimation,
+  ScaleAnimation,
+  TranslateAnimation,
+} from "./Animation";
 
 export class Object2D {
   private gl: WebGL2RenderingContext;
@@ -25,12 +26,15 @@ export class Object2D {
   private texIndex: number;
   private animations: CustomAnimation[];
 
+  private trsMatrix: mat4;
+
   constructor(gl: WebGL2RenderingContext, shaderProgram: ShaderProgram) {
     this.gl = gl;
     this.vao = new VertexArrayObject(this.gl);
     this.vertexPositions = [];
     this.shaderProgram = shaderProgram;
     this.texIndex = 0;
+    this.trsMatrix = mat4.create();
     this.animations = [];
   }
 
@@ -83,6 +87,7 @@ export class Object2D {
     this.texPositionBufferLayout.push(this.gl.FLOAT, 2, 2, 0, "u_texpos");
   }
 
+  // TODO: let renderer handle this?
   public bind() {
     this.vao.bind();
     this.vao.addBuffer(
@@ -93,28 +98,64 @@ export class Object2D {
     this.vao.addBuffer(this.texPositionBuffer, this.texPositionBufferLayout);
     this.indexBuffer.bind();
     this.shaderProgram.setUniform1i("u_Texture", this.texIndex);
+    this.shaderProgram.setUniformMatrix4fv("uModelMatrix", this.trsMatrix);
   }
 
   public getIndexBufferSize() {
     return this.index.length;
   }
 
-  public scale(factor: number) {
-    this.vertexPositions = scale2DAroundCenterProvider(factor)(
-      this.vertexPositions
-    );
-    this.vertexPositionsBuffer.replaceItems(this.vertexPositions);
-    this.vertexPositionsBuffer.bufferData();
+  public translateBy(vector: vec3, durationMs?: number, delay?: number) {
+    if (this.animations.find((anim) => anim.isBlocking())) {
+      console.warn("Blocking animation in progress - translation cancelled!");
+      return;
+    }
+
+    var additionalTranslationMatrx = mat4.create();
+    if (durationMs) {
+      window.setTimeout(() => {
+        this.addAnimation(
+          new TranslateAnimation(this.trsMatrix, vector, durationMs)
+        );
+      }, delay);
+      return;
+    }
+    mat4.fromTranslation(additionalTranslationMatrx, vector);
+    mat4.add(this.trsMatrix, this.trsMatrix, additionalTranslationMatrx);
   }
 
-  public translate(x: number, y: number) {
-    this.vertexPositions = translate2DProvider(x, y)(this.vertexPositions);
-    this.vertexPositionsBuffer.replaceItems(this.vertexPositions);
-    this.vertexPositionsBuffer.bufferData();
+  public scaleBy(factor: number, durationMs?: number, delay?: number) {
+    if (this.animations.find((anim) => anim.isBlocking())) {
+      console.warn("Blocking animation in progress - scaling cancelled!");
+      return;
+    }
+
+    if (durationMs) {
+      if (this.animations.length != 0) {
+        console.warn(
+          "scaleBy is a blocking animation, other animations are currently in progress, scaling instantly"
+        );
+      } else {
+        window.setTimeout(() => {
+          this.addAnimation(
+            new ScaleAnimation(this.trsMatrix, factor, durationMs)
+          );
+        }, delay);
+        return;
+      }
+    }
+    mat4.scale(
+      this.trsMatrix,
+      this.trsMatrix,
+      vec3.fromValues(factor, factor, factor)
+    );
+  }
+
+  public translateTo(vector: vec3) {
+    mat4.fromTranslation(this.trsMatrix, vector);
   }
 
   public addAnimation(animation: CustomAnimation) {
-    animation.init(this.vertexPositionsBuffer);
     this.animations.push(animation);
   }
 

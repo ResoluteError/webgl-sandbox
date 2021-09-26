@@ -1,8 +1,9 @@
 import { Object2D } from "./objects/Object2D";
 import { GameLoop } from "./game/GameLoop";
 import { ShaderProgram } from "./opengl/shaders/ShaderProgram";
-import { TranslateAnimation, ZoomAnimation } from "./objects/Animation";
+import { TranslateAnimation } from "./objects/Animation";
 import { Camera } from "./game/Camera";
+import { vec3 } from "gl-matrix";
 
 async function getHeart(
   gl: WebGL2RenderingContext,
@@ -11,12 +12,12 @@ async function getHeart(
 ) {
   const heart = new Object2D(gl, shaderProgram);
   heart.setVertexPositions([
-    [-1.75, 0.5],
-    [-1.25, 1],
-    [-0.75, 0.5],
-    [-0.25, 1],
-    [0.25, 0.5],
-    [-0.75, -1],
+    [-1, 0.5],
+    [-0.5, 1],
+    [0, 0.5],
+    [0.5, 1],
+    [1, 0.5],
+    [0, -1],
   ]);
   await heart.setImageTexture(
     red ? "/resources/textures/red.jpeg" : "/resources/textures/blue.jpeg"
@@ -45,16 +46,12 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     gameLoop.addCamera(camera);
 
-    redHeart.translate(-3, 0);
-    blueHeart.translate(3, 0);
-
-    redHeart.addAnimation(new TranslateAnimation(1000, 1, 0, 1000));
-    blueHeart.addAnimation(new TranslateAnimation(1000, -1, 0, 1000));
-    redHeart.addAnimation(new ZoomAnimation(1000, 2, 2000));
-    blueHeart.addAnimation(new ZoomAnimation(1000, 2, 2000));
-
-    gameLoop.addObjectToScene(redHeart);
     gameLoop.addObjectToScene(blueHeart);
+    gameLoop.addObjectToScene(redHeart);
+
+    blueHeart.translateTo(vec3.fromValues(-5, -2, 0));
+    blueHeart.translateBy(vec3.fromValues(5, 2, 2), 1000, 3000);
+    redHeart.scaleBy(2, 1000, 1000);
 
     gameLoop.start();
   } catch (err) {
