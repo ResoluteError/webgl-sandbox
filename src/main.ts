@@ -1,7 +1,8 @@
 import { Object2D } from "./objects/Object2D";
-import { GameLoop } from "./gameLoop/GameLoop";
+import { GameLoop } from "./gameObjects/GameLoop";
 import { ShaderProgram } from "./shaders/ShaderProgram";
 import { TranslateAnimation, ZoomAnimation } from "./objects/Animation";
+import { Camera } from "./gameObjects/Camera";
 
 async function getHeart(
   gl: WebGL2RenderingContext,
@@ -39,6 +40,10 @@ document.addEventListener("DOMContentLoaded", async function () {
       gameLoop.getShaderProgram(),
       false
     );
+
+    const camera = new Camera(0.05, 1, 0, 0, -5.0);
+
+    gameLoop.addCamera(camera);
 
     redHeart.translate(-3, 0);
     blueHeart.translate(3, 0);

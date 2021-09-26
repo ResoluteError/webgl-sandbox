@@ -73,7 +73,7 @@ export class Renderer {
 
       this.gl.viewport(0, 0, window.innerWidth, window.innerHeight);
 
-      const projectionMatrix = new ProjectionMatrix(height, width, {});
+      const projectionMatrix = new ProjectionMatrix(height, width, true, {});
 
       shaderProgram.setUniformMatrix4fv(
         projectionMatrix.getUniformName(),

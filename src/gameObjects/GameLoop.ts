@@ -4,6 +4,9 @@ import { fragmentShaderSource } from "../../resources/shaders/fragmentShader.sou
 import { vertexShaderSource } from "../../resources/shaders/vertexShader.source";
 import { ModelViewMatrix } from "../matrices/ModelViewMatrix";
 import { Object2D } from "../objects/Object2D";
+import { KeyboardManager } from "./keyboard/KeyboardManager";
+import { Camera } from "./Camera";
+import { KEYBOARD_MAP } from "./keyboard/KeyboardMap";
 
 export class GameLoop {
   maxFps: number;
@@ -16,12 +19,17 @@ export class GameLoop {
   modelViewMatrix: ModelViewMatrix;
   nextFrameTimerId: number;
   objects: Object2D[];
+  keyboardManager: KeyboardManager;
+  camera: Camera;
 
   constructor(maxFps: number, canvas: HTMLCanvasElement) {
     this.maxFps = maxFps;
     this.maxMSpF = 1000 / maxFps;
     this.canvas = canvas;
     this.objects = [];
+    this.keyboardManager = new KeyboardManager();
+    window.onkeydown = (event) => this.keyboardManager.keyDown(event);
+    window.onkeyup = (event) => this.keyboardManager.keyUp(event);
 
     this.gl = canvas.getContext("webgl2");
 
@@ -32,14 +40,6 @@ export class GameLoop {
 
     this.renderer = new Renderer(this.gl);
     this.renderer.setup(0, 0, 0, 1);
-
-    this.modelViewMatrix = new ModelViewMatrix();
-    this.modelViewMatrix.set(0.0, 0.0, -5.0);
-    this.shaderProgram.setUniformMatrix4fv(
-      this.modelViewMatrix.getUniformName(),
-      this.modelViewMatrix.getMatrix(),
-      false
-    );
   }
 
   // TODO: Refactor this
@@ -52,16 +52,6 @@ export class GameLoop {
     return this.gl;
   }
 
-  setupCamera(x?: number, y?: number, z?: number) {
-    this.modelViewMatrix.set(x ?? 0.0, y ?? 0.0, z ?? -5.0);
-
-    this.shaderProgram.setUniformMatrix4fv(
-      this.modelViewMatrix.getUniformName(),
-      this.modelViewMatrix.getMatrix(),
-      false
-    );
-  }
-
   addObjectToScene(obj: Object2D): number {
     return this.objects.push(obj) - 1;
   }
@@ -70,12 +60,41 @@ export class GameLoop {
     this.objects.splice(id, 1);
   }
 
+  public addCamera(camera: Camera) {
+    camera.init(this.gl, this.shaderProgram);
+    this.camera = camera;
+    this.keyboardManager.pushAction(KEYBOARD_MAP["w"], () =>
+      camera.moveVertical(true)
+    );
+    this.keyboardManager.pushAction(KEYBOARD_MAP["s"], () =>
+      camera.moveVertical(false)
+    );
+    this.keyboardManager.pushAction(KEYBOARD_MAP["d"], () =>
+      camera.moveHorizontal(true)
+    );
+    this.keyboardManager.pushAction(KEYBOARD_MAP["a"], () =>
+      camera.moveHorizontal(false)
+    );
+    this.keyboardManager.pushAction(KEYBOARD_MAP["+"], () =>
+      camera.moveDeep(true)
+    );
+    this.keyboardManager.pushAction(KEYBOARD_MAP["-"], () =>
+      camera.moveDeep(false)
+    );
+  }
+
   async start() {
+    if (!this.camera) {
+      throw new Error(
+        "Camera is required for GameLoop - call GameLoop#addCamera(camera : Camera)"
+      );
+    }
     window.requestAnimationFrame(this.nextFrame.bind(this));
   }
 
   nextFrame(timestamp: number) {
     const frameStartTime = Date.now();
+    this.keyboardManager.executeActions();
     this.renderer.clear();
     this.renderer.updateWindowSize(
       window.innerWidth,
@@ -83,11 +102,12 @@ export class GameLoop {
       this.canvas,
       this.shaderProgram
     );
-
+    this.camera.onNextFrame();
     this.objects.forEach((obj) => {
       this.renderer.drawObject(obj);
       obj.doAfterRender(timestamp);
     });
+    this.camera.beforeNextFrame();
     const nextFrameWaitTime = this.maxMSpF - (Date.now() - frameStartTime);
     this.nextFrameTimerId = window.setTimeout(
       () => {

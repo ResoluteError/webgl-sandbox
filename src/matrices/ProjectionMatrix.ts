@@ -17,21 +17,35 @@ export class ProjectionMatrix {
   constructor(
     clientHeight: number,
     clientWidth: number,
+    pesrpective: boolean,
     { fieldOfView, aspect, zNear, zFar }: ProjectionMatrixProps
   ) {
-    this.fieldOfView = fieldOfView ?? (90 * Math.PI) / 180;
-    this.aspect = aspect ?? clientWidth / clientHeight;
+    this.projectionMatrix = mat4.create();
     this.zNear = zNear ?? 0.1;
     this.zFar = zFar ?? 100.0;
-    this.projectionMatrix = mat4.create();
 
-    mat4.perspective(
-      this.projectionMatrix,
-      this.fieldOfView,
-      this.aspect,
-      this.zNear,
-      this.zFar
-    );
+    if (pesrpective) {
+      this.fieldOfView = fieldOfView ?? (90 * Math.PI) / 180;
+      this.aspect = aspect ?? clientWidth / clientHeight;
+
+      mat4.perspective(
+        this.projectionMatrix,
+        this.fieldOfView,
+        this.aspect,
+        this.zNear,
+        this.zFar
+      );
+    } else {
+      mat4.ortho(
+        this.projectionMatrix,
+        -(clientWidth / 200),
+        clientWidth / 200,
+        -(clientHeight / 200),
+        clientHeight / 200,
+        this.zNear,
+        this.zFar
+      );
+    }
   }
 
   public getMatrix(): mat4 {

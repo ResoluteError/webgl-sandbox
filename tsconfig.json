@@ -10,6 +10,7 @@
       "moduleResolution": "node",
       "allowSyntheticDefaultImports" : true,
       "esModuleInterop" : true,
+      "downlevelIteration": true
     },
     "include": ["src/**/*", "resources/**/*.ts"],
     "exclude": ["node_modules", "**/*.spec.ts"]
