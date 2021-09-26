@@ -1,8 +1,8 @@
-import { Renderer } from "../renderer/Renderer";
-import { ShaderProgram } from "../shaders/ShaderProgram";
+import { Renderer } from "../opengl/renderer/Renderer";
+import { ShaderProgram } from "../opengl/shaders/ShaderProgram";
 import { fragmentShaderSource } from "../../resources/shaders/fragmentShader.source";
 import { vertexShaderSource } from "../../resources/shaders/vertexShader.source";
-import { ModelViewMatrix } from "../matrices/ModelViewMatrix";
+import { ModelViewMatrix } from "../opengl/matrices/ModelViewMatrix";
 import { Object2D } from "../objects/Object2D";
 import { KeyboardManager } from "./keyboard/KeyboardManager";
 import { Camera } from "./Camera";

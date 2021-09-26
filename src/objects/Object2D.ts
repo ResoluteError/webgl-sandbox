@@ -1,13 +1,13 @@
-import { IndexBuffer } from "../buffers/IndexBuffer";
-import { VertexBuffer } from "../buffers/VertexBuffer";
-import { VertexBufferLayout } from "../buffers/VertexBufferLayout";
+import { IndexBuffer } from "../opengl/buffers/IndexBuffer";
+import { VertexBuffer } from "../opengl/buffers/VertexBuffer";
+import { VertexBufferLayout } from "../opengl/buffers/VertexBufferLayout";
 import {
   scale2DAroundCenterProvider,
   translate2DProvider,
-} from "../matrices/utils/2DUtils";
-import { ShaderProgram } from "../shaders/ShaderProgram";
-import { TextureMapper } from "../textures/TextureMapper";
-import { VertexArrayObject } from "../vertexArrayObject/VertexArrayObject";
+} from "../opengl/matrices/utils/2DUtils";
+import { ShaderProgram } from "../opengl/shaders/ShaderProgram";
+import { TextureMapper } from "../opengl/textures/TextureMapper";
+import { VertexArrayObject } from "../opengl/vertexArrayObject/VertexArrayObject";
 import { CustomAnimation } from "./Animation";
 
 export class Object2D {

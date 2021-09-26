@@ -1,6 +1,6 @@
-import { ModelViewMatrix } from "../matrices/ModelViewMatrix";
-import { ProjectionMatrix } from "../matrices/ProjectionMatrix";
-import { ShaderProgram } from "../shaders/ShaderProgram";
+import { ModelViewMatrix } from "../opengl/matrices/ModelViewMatrix";
+import { ProjectionMatrix } from "../opengl/matrices/ProjectionMatrix";
+import { ShaderProgram } from "../opengl/shaders/ShaderProgram";
 
 export enum CAMERA_ACTION {
   ROTATE_RIGHT,

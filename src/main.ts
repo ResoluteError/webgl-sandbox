@@ -1,8 +1,8 @@
 import { Object2D } from "./objects/Object2D";
-import { GameLoop } from "./gameObjects/GameLoop";
-import { ShaderProgram } from "./shaders/ShaderProgram";
+import { GameLoop } from "./game/GameLoop";
+import { ShaderProgram } from "./opengl/shaders/ShaderProgram";
 import { TranslateAnimation, ZoomAnimation } from "./objects/Animation";
-import { Camera } from "./gameObjects/Camera";
+import { Camera } from "./game/Camera";
 
 async function getHeart(
   gl: WebGL2RenderingContext,

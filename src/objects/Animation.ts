@@ -1,9 +1,9 @@
-import { VertexBuffer } from "../buffers/VertexBuffer";
+import { VertexBuffer } from "../opengl/buffers/VertexBuffer";
 import {
   get2DCenter,
   scale2DAroundKnownCenterProvider,
   translate2DProvider,
-} from "../matrices/utils/2DUtils";
+} from "../opengl/matrices/utils/2DUtils";
 
 export interface CustomAnimation {
   animate(timestamp: number, cb: CallableFunction): void;

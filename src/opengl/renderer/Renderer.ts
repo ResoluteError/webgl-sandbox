@@ -1,6 +1,6 @@
 import { IndexBuffer } from "../buffers/IndexBuffer";
 import { ProjectionMatrix } from "../matrices/ProjectionMatrix";
-import { Object2D } from "../objects/Object2D";
+import { Object2D } from "../../objects/Object2D";
 import { ShaderProgram } from "../shaders/ShaderProgram";
 import { VertexArrayObject } from "../vertexArrayObject/VertexArrayObject";
 
