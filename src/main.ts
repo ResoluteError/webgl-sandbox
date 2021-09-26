@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       false
     );
 
-    const camera = new Camera(0.05, 1, 0, 0, -5.0);
+    const camera = new Camera(0.1, 1, true, 0, 0, -5.0);
 
     gameLoop.addCamera(camera);
 

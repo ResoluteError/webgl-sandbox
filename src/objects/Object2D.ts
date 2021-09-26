@@ -123,7 +123,6 @@ export class Object2D {
       if (animation)
         animation.animate(timestamp, () => {
           this.animations[index] = null;
-          console.log("Done");
         });
     });
   }

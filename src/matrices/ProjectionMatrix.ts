@@ -15,8 +15,8 @@ export class ProjectionMatrix {
   private projectionMatrix: mat4;
 
   constructor(
-    clientHeight: number,
     clientWidth: number,
+    clientHeight: number,
     pesrpective: boolean,
     { fieldOfView, aspect, zNear, zFar }: ProjectionMatrixProps
   ) {

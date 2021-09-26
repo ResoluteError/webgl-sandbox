@@ -7,6 +7,7 @@ import { Object2D } from "../objects/Object2D";
 import { KeyboardManager } from "./keyboard/KeyboardManager";
 import { Camera } from "./Camera";
 import { KEYBOARD_MAP } from "./keyboard/KeyboardMap";
+import { WindowManager } from "./window/WindowManager";
 
 export class GameLoop {
   maxFps: number;
@@ -20,18 +21,20 @@ export class GameLoop {
   nextFrameTimerId: number;
   objects: Object2D[];
   keyboardManager: KeyboardManager;
+  windowManager: WindowManager;
   camera: Camera;
 
   constructor(maxFps: number, canvas: HTMLCanvasElement) {
+    this.gl = canvas.getContext("webgl2");
     this.maxFps = maxFps;
     this.maxMSpF = 1000 / maxFps;
     this.canvas = canvas;
     this.objects = [];
     this.keyboardManager = new KeyboardManager();
+    this.windowManager = new WindowManager(canvas, this.gl, true);
     window.onkeydown = (event) => this.keyboardManager.keyDown(event);
     window.onkeyup = (event) => this.keyboardManager.keyUp(event);
-
-    this.gl = canvas.getContext("webgl2");
+    window.onresize = (_) => this.windowManager.queueResize();
 
     this.shaderProgram = new ShaderProgram(this.gl);
     this.shaderProgram.addShader(this.gl.VERTEX_SHADER, vertexShaderSource);
@@ -61,7 +64,11 @@ export class GameLoop {
   }
 
   public addCamera(camera: Camera) {
-    camera.init(this.gl, this.shaderProgram);
+    camera.init(this.shaderProgram);
+    camera.setDimension(
+      this.windowManager.getWidth(),
+      this.windowManager.getHeight()
+    );
     this.camera = camera;
     this.keyboardManager.pushAction(KEYBOARD_MAP["w"], () =>
       camera.moveVertical(true)
@@ -94,14 +101,11 @@ export class GameLoop {
 
   nextFrame(timestamp: number) {
     const frameStartTime = Date.now();
+    this.windowManager.doResize((width, height) =>
+      this.camera.setDimension(width, height)
+    );
     this.keyboardManager.executeActions();
     this.renderer.clear();
-    this.renderer.updateWindowSize(
-      window.innerWidth,
-      window.innerHeight,
-      this.canvas,
-      this.shaderProgram
-    );
     this.camera.onNextFrame();
     this.objects.forEach((obj) => {
       this.renderer.drawObject(obj);

@@ -1,4 +1,5 @@
 import { ModelViewMatrix } from "../matrices/ModelViewMatrix";
+import { ProjectionMatrix } from "../matrices/ProjectionMatrix";
 import { ShaderProgram } from "../shaders/ShaderProgram";
 
 export enum CAMERA_ACTION {
@@ -14,26 +15,32 @@ export enum CAMERA_ACTION {
 
 export class Camera {
   modelViewMatrix: ModelViewMatrix;
+  projectionMatrix: ProjectionMatrix;
   moveSpeed: number; // change per frame in
   rotateSpeed: number; // change per frame in
   actionQueue: CAMERA_ACTION[];
-  gl: WebGL2RenderingContext;
   shaderProgram: ShaderProgram;
 
   constructor(
     initMoveSpeed: number,
     initRotateSpeed: number,
+    perspective: boolean,
     startX: number,
     startY: number,
     startZ: number
   ) {
     this.modelViewMatrix = new ModelViewMatrix();
     this.modelViewMatrix.set(startX, startY, startZ);
+    this.projectionMatrix = new ProjectionMatrix(
+      window.innerWidth,
+      window.innerHeight,
+      perspective,
+      {}
+    );
     this.setSpeed(initMoveSpeed, initRotateSpeed);
   }
 
-  init(gl: WebGL2RenderingContext, shaderProgram: ShaderProgram) {
-    this.gl = gl;
+  init(shaderProgram: ShaderProgram) {
     this.shaderProgram = shaderProgram;
     this.actionQueue = [];
   }
@@ -63,6 +70,15 @@ export class Camera {
   setSpeed(moveSpeed: number, rotateSpeed: number) {
     this.moveSpeed = moveSpeed;
     this.rotateSpeed = rotateSpeed;
+  }
+
+  setDimension(width: number, height: number) {
+    const projectionMatrix = new ProjectionMatrix(width, height, true, {});
+    this.shaderProgram.setUniformMatrix4fv(
+      projectionMatrix.getUniformName(),
+      projectionMatrix.getMatrix(),
+      false
+    );
   }
 
   beforeNextFrame() {

@@ -57,29 +57,4 @@ export class Renderer {
       0
     );
   }
-
-  public updateWindowSize(
-    width: number,
-    height: number,
-    canvasElement: HTMLCanvasElement,
-    shaderProgram: ShaderProgram
-  ) {
-    if (width !== this.prevWidth || height !== this.prevHeight) {
-      this.prevHeight = height;
-      this.prevWidth = width;
-
-      canvasElement.setAttribute("height", `${height}`);
-      canvasElement.setAttribute("width", `${width}`);
-
-      this.gl.viewport(0, 0, window.innerWidth, window.innerHeight);
-
-      const projectionMatrix = new ProjectionMatrix(height, width, true, {});
-
-      shaderProgram.setUniformMatrix4fv(
-        projectionMatrix.getUniformName(),
-        projectionMatrix.getMatrix(),
-        false
-      );
-    }
-  }
 }
