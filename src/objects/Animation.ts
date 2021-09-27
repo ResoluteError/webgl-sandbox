@@ -1,7 +1,7 @@
 import { mat4, vec3 } from "gl-matrix";
 
 export interface CustomAnimation {
-  animate(timestamp: number, cb: CallableFunction): void;
+  animate(timestamp: number): void;
   isBlocking(): boolean;
 }
 
@@ -13,15 +13,25 @@ export class TranslateAnimation implements CustomAnimation {
   modelMatrix: mat4;
   vector: vec3;
   active: boolean;
+  id: number;
+  completionCb?: (id: number) => void;
 
-  constructor(modelMatrix: mat4, vector: vec3, durationMs: number) {
+  constructor(
+    id: number,
+    modelMatrix: mat4,
+    vector: vec3,
+    durationMs: number,
+    completionCb?: (id: number) => void
+  ) {
+    this.id = id;
     this.vector = vector;
     this.durationMs = durationMs;
     this.active = false;
     this.modelMatrix = modelMatrix;
+    this.completionCb = completionCb;
   }
 
-  animate(timestamp: number, cb: CallableFunction) {
+  animate(timestamp: number) {
     if (!this.active) {
       this.active = true;
       this.prevFrameTimestamp = timestamp;
@@ -44,7 +54,7 @@ export class TranslateAnimation implements CustomAnimation {
 
     this.prevFrameTimestamp = timestamp;
     if (timestamp > this.endFrameTimestamp) {
-      cb();
+      if (this.completionCb) this.completionCb(this.id);
       return;
     }
   }
@@ -54,31 +64,36 @@ export class TranslateAnimation implements CustomAnimation {
   }
 }
 
-/**
- * The issue with scaling is that it is not linear if using the trs matrix recursively,
- * resulting in exponential growth depending on the FPS. However, if we don't recursively
- * update the trs matrix, then multiple effects cannot layer over each other...
- */
 export class ScaleAnimation implements CustomAnimation {
   startFrameTimestamp: number;
   prevFrameTimestamp: number;
   endFrameTimestamp: number;
-  baseTrsMatrix: mat4;
+  baseScaleMatrix: mat4;
   durationMs: number;
-  modelMatrix: mat4;
+  scaleMatrix: mat4;
   factor: number;
   active: boolean;
+  completionCb?: (id: number) => void;
+  id: number;
 
-  constructor(modelMatrix: mat4, factor: number, durationMs: number) {
+  constructor(
+    id: number,
+    scaleMatrix: mat4,
+    factor: number,
+    durationMs: number,
+    completionCb?: (id: number) => void
+  ) {
     this.factor = factor - 1;
     this.durationMs = durationMs;
     this.active = false;
-    this.modelMatrix = modelMatrix;
-    this.baseTrsMatrix = mat4.create();
-    mat4.copy(this.baseTrsMatrix, this.modelMatrix);
+    this.scaleMatrix = scaleMatrix;
+    this.baseScaleMatrix = mat4.create();
+    this.completionCb = completionCb;
+    this.id = id;
+    mat4.copy(this.baseScaleMatrix, this.scaleMatrix);
   }
 
-  animate(timestamp: number, cb: CallableFunction) {
+  animate(timestamp: number) {
     if (!this.active) {
       this.active = true;
       this.endFrameTimestamp = timestamp + this.durationMs;
@@ -92,13 +107,13 @@ export class ScaleAnimation implements CustomAnimation {
     var factor = 1 + this.factor * progressSinceStart;
 
     mat4.scale(
-      this.modelMatrix,
-      this.baseTrsMatrix,
+      this.scaleMatrix,
+      this.baseScaleMatrix,
       vec3.fromValues(factor, factor, factor)
     );
 
     if (timestamp > this.endFrameTimestamp) {
-      cb();
+      if (this.completionCb) this.completionCb(this.id);
       return;
     }
   }

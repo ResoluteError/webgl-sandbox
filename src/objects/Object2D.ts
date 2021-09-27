@@ -24,9 +24,14 @@ export class Object2D {
   private texPositionBufferLayout: VertexBufferLayout;
   private vao: VertexArrayObject;
   private texIndex: number;
-  private animations: CustomAnimation[];
 
-  private trsMatrix: mat4;
+  private animations: { [id: number]: CustomAnimation };
+  private animationIds: number[];
+  private animCounter: number;
+
+  private rotationAndtranslationMatrix: mat4;
+  private scaleMatrix: mat4;
+  private scaleInProgress: boolean;
 
   constructor(gl: WebGL2RenderingContext, shaderProgram: ShaderProgram) {
     this.gl = gl;
@@ -34,8 +39,11 @@ export class Object2D {
     this.vertexPositions = [];
     this.shaderProgram = shaderProgram;
     this.texIndex = 0;
-    this.trsMatrix = mat4.create();
-    this.animations = [];
+    this.rotationAndtranslationMatrix = mat4.create();
+    this.scaleMatrix = mat4.create();
+    this.animations = {};
+    this.animationIds = [];
+    this.animCounter = 0;
   }
 
   public setVertexPositions(positions: [number, number][]): void {
@@ -98,7 +106,10 @@ export class Object2D {
     this.vao.addBuffer(this.texPositionBuffer, this.texPositionBufferLayout);
     this.indexBuffer.bind();
     this.shaderProgram.setUniform1i("u_Texture", this.texIndex);
-    this.shaderProgram.setUniformMatrix4fv("uModelMatrix", this.trsMatrix);
+    this.shaderProgram.setUniformMatrix4fv(
+      "uModelMatrix",
+      this.getModelMatrix()
+    );
   }
 
   public getIndexBufferSize() {
@@ -106,65 +117,92 @@ export class Object2D {
   }
 
   public translateBy(vector: vec3, durationMs?: number, delay?: number) {
-    if (this.animations.find((anim) => anim.isBlocking())) {
-      console.warn("Blocking animation in progress - translation cancelled!");
-      return;
-    }
-
     var additionalTranslationMatrx = mat4.create();
     if (durationMs) {
       window.setTimeout(() => {
         this.addAnimation(
-          new TranslateAnimation(this.trsMatrix, vector, durationMs)
+          new TranslateAnimation(
+            this.animCounter,
+            this.rotationAndtranslationMatrix,
+            vector,
+            durationMs,
+            (id: number) => {
+              this.animations[id] = null;
+              this.animationIds.splice(
+                this.animationIds.findIndex((animId) => animId === id),
+                1
+              );
+            }
+          )
         );
       }, delay);
       return;
     }
     mat4.fromTranslation(additionalTranslationMatrx, vector);
-    mat4.add(this.trsMatrix, this.trsMatrix, additionalTranslationMatrx);
+    mat4.add(
+      this.rotationAndtranslationMatrix,
+      this.rotationAndtranslationMatrix,
+      additionalTranslationMatrx
+    );
   }
 
   public scaleBy(factor: number, durationMs?: number, delay?: number) {
-    if (this.animations.find((anim) => anim.isBlocking())) {
-      console.warn("Blocking animation in progress - scaling cancelled!");
+    if (this.scaleInProgress) {
+      console.warn("Scaling animation in progress - scaling cancelled!");
       return;
     }
 
     if (durationMs) {
-      if (this.animations.length != 0) {
-        console.warn(
-          "scaleBy is a blocking animation, other animations are currently in progress, scaling instantly"
+      this.scaleInProgress;
+      window.setTimeout(() => {
+        this.addAnimation(
+          new ScaleAnimation(
+            this.animCounter,
+            this.scaleMatrix,
+            factor,
+            durationMs,
+            (id: number) => {
+              this.scaleInProgress = false;
+              this.animations[id] = null;
+              this.animationIds.splice(
+                this.animationIds.findIndex((animId) => animId === id),
+                1
+              );
+            }
+          )
         );
-      } else {
-        window.setTimeout(() => {
-          this.addAnimation(
-            new ScaleAnimation(this.trsMatrix, factor, durationMs)
-          );
-        }, delay);
-        return;
-      }
+      }, delay);
+      return;
     }
     mat4.scale(
-      this.trsMatrix,
-      this.trsMatrix,
+      this.scaleMatrix,
+      this.scaleMatrix,
       vec3.fromValues(factor, factor, factor)
     );
   }
 
   public translateTo(vector: vec3) {
-    mat4.fromTranslation(this.trsMatrix, vector);
+    mat4.fromTranslation(this.rotationAndtranslationMatrix, vector);
+  }
+
+  public getModelMatrix() {
+    return mat4.mul(
+      mat4.create(),
+      this.scaleMatrix,
+      this.rotationAndtranslationMatrix
+    );
   }
 
   public addAnimation(animation: CustomAnimation) {
-    this.animations.push(animation);
+    this.animations[this.animCounter] = animation;
+    this.animationIds.push(this.animCounter);
+    this.animCounter++;
   }
 
   public doAfterRender(timestamp: number) {
-    this.animations.forEach((animation, index) => {
-      if (animation)
-        animation.animate(timestamp, () => {
-          this.animations[index] = null;
-        });
+    this.animationIds.forEach((animationId) => {
+      if (this.animations[animationId])
+        this.animations[animationId].animate(timestamp);
     });
   }
 }

@@ -50,8 +50,10 @@ document.addEventListener("DOMContentLoaded", async function () {
     gameLoop.addObjectToScene(redHeart);
 
     blueHeart.translateTo(vec3.fromValues(-5, -2, 0));
-    blueHeart.translateBy(vec3.fromValues(5, 2, 2), 1000, 3000);
     redHeart.scaleBy(2, 1000, 1000);
+    redHeart.translateBy(vec3.fromValues(5, 0, 0), 1000, 1000);
+    redHeart.translateBy(vec3.fromValues(-5, 0, 0), 1000, 2000);
+    blueHeart.translateBy(vec3.fromValues(5, 2, 2), 1000, 3000);
 
     gameLoop.start();
   } catch (err) {
