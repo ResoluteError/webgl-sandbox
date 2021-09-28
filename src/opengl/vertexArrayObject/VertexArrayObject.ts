@@ -24,6 +24,8 @@ export class VertexArrayObject {
   ) {
     buffer.bind();
 
+    // console.log("Vertex Elements: ", vertexBufferLayot.getElements());
+
     vertexBufferLayot.getElements().forEach((elementLayout) => {
       this.gl.enableVertexAttribArray(elementLayout.index);
       this.gl.vertexAttribPointer(

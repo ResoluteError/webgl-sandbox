@@ -13,6 +13,7 @@ export class TranslateAnimation implements CustomAnimation {
   modelMatrix: mat4;
   vector: vec3;
   active: boolean;
+  translationTotal: vec3;
   id: number;
   completionCb?: (id: number) => void;
 
@@ -29,6 +30,7 @@ export class TranslateAnimation implements CustomAnimation {
     this.active = false;
     this.modelMatrix = modelMatrix;
     this.completionCb = completionCb;
+    this.translationTotal = vec3.fromValues(0, 0, 0);
   }
 
   animate(timestamp: number) {
@@ -38,25 +40,34 @@ export class TranslateAnimation implements CustomAnimation {
       this.endFrameTimestamp = timestamp + this.durationMs;
       this.startFrameTimestamp = timestamp;
     }
+
     const progressSinceLastFrame =
       (Math.min(timestamp, this.endFrameTimestamp) - this.prevFrameTimestamp) /
       this.durationMs;
 
-    mat4.translate(
-      this.modelMatrix,
-      this.modelMatrix,
-      vec3.fromValues(
-        this.vector[0] * progressSinceLastFrame,
-        this.vector[1] * progressSinceLastFrame,
-        this.vector[2] * progressSinceLastFrame
-      )
-    );
-
     this.prevFrameTimestamp = timestamp;
+
     if (timestamp > this.endFrameTimestamp) {
+      if (vec3.equals(this.translationTotal, this.vector)) {
+        mat4.translate(
+          this.modelMatrix,
+          this.modelMatrix,
+          vec3.subtract(vec3.create(), this.vector, this.translationTotal)
+        );
+      }
+
       if (this.completionCb) this.completionCb(this.id);
       return;
     }
+
+    let frameTranslation = vec3.fromValues(
+      this.vector[0] * progressSinceLastFrame,
+      this.vector[1] * progressSinceLastFrame,
+      this.vector[2] * progressSinceLastFrame
+    );
+    vec3.add(this.translationTotal, this.translationTotal, frameTranslation);
+
+    mat4.translate(this.modelMatrix, this.modelMatrix, frameTranslation);
   }
 
   isBlocking() {
@@ -103,7 +114,6 @@ export class ScaleAnimation implements CustomAnimation {
       (Math.min(timestamp, this.endFrameTimestamp) - this.startFrameTimestamp) /
       this.durationMs;
 
-    // ToDo: This is actually wrong, as scaling is exponential here over time
     var factor = 1 + this.factor * progressSinceStart;
 
     mat4.scale(
@@ -119,5 +129,77 @@ export class ScaleAnimation implements CustomAnimation {
   }
   isBlocking() {
     return true;
+  }
+}
+
+export class RotateAnimation implements CustomAnimation {
+  startFrameTimestamp: number;
+  prevFrameTimestamp: number;
+  endFrameTimestamp: number;
+  durationMs: number;
+  modelMatrix: mat4;
+  axis: vec3;
+  rad: number;
+  active: boolean;
+  id: number;
+  rotateTotal: number;
+  completionCb?: (id: number) => void;
+
+  constructor(
+    id: number,
+    modelMatrix: mat4,
+    rad: number,
+    axis: vec3,
+    durationMs: number,
+    completionCb?: (id: number) => void
+  ) {
+    this.id = id;
+    this.axis = axis;
+    this.durationMs = durationMs;
+    this.rad = rad;
+    this.active = false;
+    this.modelMatrix = modelMatrix;
+    this.completionCb = completionCb;
+    this.rotateTotal = 0;
+  }
+
+  animate(timestamp: number) {
+    if (!this.active) {
+      this.active = true;
+      this.prevFrameTimestamp = timestamp;
+      this.endFrameTimestamp = timestamp + this.durationMs;
+      this.startFrameTimestamp = timestamp;
+    }
+
+    const progressSinceLastFrame =
+      (Math.min(timestamp, this.endFrameTimestamp) - this.prevFrameTimestamp) /
+      this.durationMs;
+
+    this.prevFrameTimestamp = timestamp;
+
+    if (
+      timestamp > this.endFrameTimestamp ||
+      this.rotateTotal > Math.abs(this.rad)
+    ) {
+      if (this.rotateTotal !== this.rad) {
+        mat4.rotate(
+          this.modelMatrix,
+          this.modelMatrix,
+          this.rad - this.rotateTotal,
+          this.axis
+        );
+      }
+      if (this.completionCb) this.completionCb(this.id);
+      return;
+    }
+
+    let frameRotation = this.rad * progressSinceLastFrame;
+    this.rotateTotal += frameRotation;
+
+    mat4.rotate(this.modelMatrix, this.modelMatrix, frameRotation, this.axis);
+  }
+
+  isBlocking() {
+    return false;
   }
 }

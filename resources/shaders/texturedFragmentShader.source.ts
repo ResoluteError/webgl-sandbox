@@ -1,4 +1,4 @@
-export const fragmentShaderSource = `#version 300 es
+export const texturedFragmentShaderSource = `#version 300 es
 precision highp float;
 in vec2 v_TexCoord;
 

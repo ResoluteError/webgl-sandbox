@@ -20,6 +20,9 @@ export class VertexBufferLayout {
     attributeName: string
   ) {
     const index = this.shaderProgram.getAttribLocation(attributeName);
+
+    if (index === -1)
+      console.log("VertexBufferLayout: Attribute not found: ", attributeName);
     let baseSize = 0;
     switch (type) {
       case this.gl.FLOAT:

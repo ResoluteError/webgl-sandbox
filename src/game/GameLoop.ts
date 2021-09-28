@@ -1,13 +1,14 @@
 import { Renderer } from "../opengl/renderer/Renderer";
 import { ShaderProgram } from "../opengl/shaders/ShaderProgram";
-import { fragmentShaderSource } from "../../resources/shaders/fragmentShader.source";
-import { vertexShaderSource } from "../../resources/shaders/vertexShader.source";
 import { ViewMatrix } from "../opengl/matrices/ViewMatrix";
 import { Object2D } from "../objects/Object2D";
 import { KeyboardManager } from "./keyboard/KeyboardManager";
 import { Camera } from "./Camera";
 import { KEYBOARD_MAP } from "./keyboard/KeyboardMap";
 import { WindowManager } from "./window/WindowManager";
+import { Object3D } from "../objects/Object3D";
+import { coloredFragmentShaderSource } from "../../resources/shaders/coloredFragmentShader.source";
+import { coloredVertexShaderSource } from "../../resources/shaders/coloredVertexShader.source";
 
 export class GameLoop {
   maxFps: number;
@@ -19,7 +20,7 @@ export class GameLoop {
   gl: WebGL2RenderingContext;
   viewMatrix: ViewMatrix;
   nextFrameTimerId: number;
-  objects: Object2D[];
+  objects: (Object2D | Object3D)[];
   keyboardManager: KeyboardManager;
   windowManager: WindowManager;
   camera: Camera;
@@ -37,8 +38,14 @@ export class GameLoop {
     window.onresize = (_) => this.windowManager.queueResize();
 
     this.shaderProgram = new ShaderProgram(this.gl);
-    this.shaderProgram.addShader(this.gl.VERTEX_SHADER, vertexShaderSource);
-    this.shaderProgram.addShader(this.gl.FRAGMENT_SHADER, fragmentShaderSource);
+    this.shaderProgram.addShader(
+      this.gl.VERTEX_SHADER,
+      coloredVertexShaderSource
+    );
+    this.shaderProgram.addShader(
+      this.gl.FRAGMENT_SHADER,
+      coloredFragmentShaderSource
+    );
     this.shaderProgram.link();
 
     this.renderer = new Renderer(this.gl);
@@ -55,7 +62,7 @@ export class GameLoop {
     return this.gl;
   }
 
-  addObjectToScene(obj: Object2D): number {
+  addObjectToScene(obj: Object2D | Object3D): number {
     return this.objects.push(obj) - 1;
   }
 

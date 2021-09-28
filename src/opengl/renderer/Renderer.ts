@@ -3,11 +3,10 @@ import { ProjectionMatrix } from "../matrices/ProjectionMatrix";
 import { Object2D } from "../../objects/Object2D";
 import { ShaderProgram } from "../shaders/ShaderProgram";
 import { VertexArrayObject } from "../vertexArrayObject/VertexArrayObject";
+import { Object3D } from "../../objects/Object3D";
 
 export class Renderer {
   private gl: WebGL2RenderingContext;
-  private prevWidth: number;
-  private prevHeight: number;
 
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl;
@@ -48,7 +47,7 @@ export class Renderer {
     );
   }
 
-  public drawObject(obj: Object2D) {
+  public drawObject(obj: Object2D | Object3D) {
     obj.bind();
     this.gl.drawElements(
       this.gl.TRIANGLES,
