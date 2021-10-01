@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "noImplicitAny": true,
+    "module": "es6",
+    "preserveConstEnums": true,
+    "target": "es5",
+  //   "jsx": "react",
+    "allowJs": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports" : true,
+    "esModuleInterop" : true,
+    "downlevelIteration": true
+  },
+  "include": ["src/**/*", "resources/**/*.ts", "resources/objects/heart.obj"],
+  "exclude": ["node_modules", "**/*.spec.ts"]
+}
