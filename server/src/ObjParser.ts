@@ -48,7 +48,7 @@ export class ObjParser {
           // if (normIndex) texIndexHelper.push(+texIndex - 1); // TODO, also add conditional
         });
       } else {
-        console.log("Not recognized type: ");
+        // console.log("Not recognized type: ");
       }
     }
 

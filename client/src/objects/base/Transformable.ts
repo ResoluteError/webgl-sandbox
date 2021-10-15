@@ -1,4 +1,4 @@
-import { mat4, vec3 } from "gl-matrix";
+import { mat3, mat4, vec3 } from "gl-matrix";
 import { num3 } from "../Object3D";
 
 export interface TransformableI {
@@ -51,11 +51,16 @@ export class Transformable implements TransformableI {
     );
   }
 
-  public getModelMatrix() {
+  public getModelMatrix(): mat4 {
     return mat4.mul(
       mat4.create(),
       this.scaleMatrix,
       this.rotationAndtranslationMatrix
     );
+  }
+
+  public getNormalMatrix(): mat3 {
+    let modelMatrix = this.getModelMatrix();
+    return mat3.normalFromMat4(mat3.create(), modelMatrix);
   }
 }

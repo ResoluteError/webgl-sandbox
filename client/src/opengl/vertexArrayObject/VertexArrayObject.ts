@@ -51,12 +51,20 @@ export class VertexArrayObject {
   public bindObject(obj: Object3D) {
     this.bind();
     if (!this.hasBoundBuffers) {
-      const { vertexPositionsBuffer, vertexNormalsBuffer, indexBuffer } =
-        obj.getBuffers();
-      const { vertexPositionBufferLayout, vertexNormalsBufferLayout } =
-        obj.getBufferLayouts();
+      const {
+        vertexPositionsBuffer,
+        vertexNormalsBuffer,
+        indexBuffer,
+        vertexColorsBuffer,
+      } = obj.getBuffers();
+      const {
+        vertexPositionBufferLayout,
+        vertexNormalsBufferLayout,
+        vertexColorsBufferLayout,
+      } = obj.getBufferLayouts();
       this.addBuffer(vertexPositionsBuffer, vertexPositionBufferLayout);
       this.addBuffer(vertexNormalsBuffer, vertexNormalsBufferLayout);
+      this.addBuffer(vertexColorsBuffer, vertexColorsBufferLayout);
       indexBuffer.bind();
       this.hasBoundBuffers = true;
     }

@@ -7,10 +7,13 @@ import {
   readFile,
 } from "./utils/FileUtils";
 
+export type FileTrigger = "FETCH" | "SUB";
+
 export type File = {
   relativePath: string; // usually relativePathToFile + filename + filetype
   fileName: string; // for something like "foo/bar.txt" -> "bar.txt"
   fileType: string; // for something like "bar.txt" -> .txt
+  trigger: FileTrigger;
   data: Buffer | ObjData;
 };
 
@@ -39,6 +42,7 @@ export class FileManager {
             fileName,
             fileType,
             data,
+            trigger: "SUB",
           });
         });
       });
@@ -57,7 +61,7 @@ export class FileManager {
     return this.fileWatchers[filename].pipe(throttleTime(2000));
   }
 
-  public readFile(filename: string, cb: (err: Error, file: File) => void) {
+  public fetchFile(filename: string, cb: (err: Error, file: File) => void) {
     const filePath = `${this.baseDir}/${filename}`;
     const { relativePath, fileName, fileType } = getFileMeta(
       this.baseDir,
@@ -69,6 +73,7 @@ export class FileManager {
         fileName,
         fileType,
         data,
+        trigger: "FETCH",
       });
     });
   }

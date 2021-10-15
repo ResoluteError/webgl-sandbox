@@ -81,6 +81,17 @@ export class ShaderProgram {
     this.gl.uniformMatrix4fv(location, transpose ?? false, data);
   }
 
+  public setUniformMatrix3fv(
+    name: string,
+    data: Float32List,
+    transpose?: boolean
+  ) {
+    var location = this.getUniformLocation(name);
+    this.gl.useProgram(this.program);
+
+    this.gl.uniformMatrix3fv(location, transpose ?? false, data);
+  }
+
   public setUniform1i(name: string, data: number) {
     var location = this.getUniformLocation(name);
 

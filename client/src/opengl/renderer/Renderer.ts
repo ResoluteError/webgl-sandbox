@@ -4,6 +4,8 @@ import { ShaderProgram } from "../shaders/ShaderProgram";
 import { coloredVertexShaderSource } from "../../../resources/shaders/coloredVertexShader.source";
 import { coloredFragmentShaderSource } from "../../../resources/shaders/coloredFragmentShader.source";
 import { Camera } from "../../game/Camera";
+import { Light } from "../../objects/Light";
+import { vec3 } from "gl-matrix";
 
 export class Renderer {
   private gl: WebGL2RenderingContext;
@@ -14,6 +16,7 @@ export class Renderer {
   private activeShaderProgram: ShaderProgram;
   // private cameras: Camera[];
   private activeCamera: Camera;
+  private light: Light;
 
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl;
@@ -33,7 +36,12 @@ export class Renderer {
     this.activeShaderProgram.link();
     this.activeShaderProgram.useProgram();
     this.activeVao = new VertexArrayObject(this.gl, this.activeShaderProgram);
-
+    this.light = new Light(
+      gl,
+      vec3.fromValues(0, 0, 4),
+      1,
+      vec3.fromValues(1, 1, 1)
+    );
     if (!gl) {
       throw new Error(
         "Unable to initialize WebGL. Your browser or machine may not support it."
@@ -82,6 +90,7 @@ export class Renderer {
     this.objects.forEach((obj, i) => {
       obj.preRender(timestamp);
     });
+    this.activeCamera.beforeNextFrame();
   }
 
   public render() {
@@ -99,6 +108,10 @@ export class Renderer {
       viewMatrix.getMatrix(),
       false
     );
+    this.activeShaderProgram.setUniform3f(
+      "u_LightPos",
+      this.light.getPosition()
+    );
     this.objects.forEach((obj, i) => {
       if (obj === null || !obj.getIsRenderable()) return;
       if (!this.activeVao.getHasBoundBuffers()) {
@@ -108,6 +121,10 @@ export class Renderer {
       this.activeShaderProgram.setUniformMatrix4fv(
         "uModelMatrix",
         obj.getModelMatrix()
+      );
+      this.activeShaderProgram.setUniformMatrix3fv(
+        "u_NormalMatrix",
+        obj.getNormalMatrix()
       );
       this.gl.drawElements(
         this.gl.TRIANGLES,

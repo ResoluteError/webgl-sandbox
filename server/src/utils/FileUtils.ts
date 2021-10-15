@@ -43,7 +43,7 @@ export function readFile(path: string, cb: (err: Error, data: Buffer) => void) {
 export function getFileMeta(
   baseDir: string,
   fullPath: string
-): Omit<File, "data"> {
+): Omit<File, "data" | "trigger"> {
   const relativePath = fullPath.replace(baseDir + "/", "");
   const relativePathSplit = relativePath.split("/");
   const fileName = relativePathSplit[relativePathSplit.length - 1];

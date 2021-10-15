@@ -16,8 +16,11 @@ export class IndexBuffer implements CustomBuffer<number> {
   }
 
   public addItems(items: number[]) {
-    console.log("Adding items to index buffer: ", items);
     this.indexes = this.indexes.concat(items);
+  }
+
+  public setItems(items: number[]) {
+    this.indexes = items;
   }
 
   public bufferData() {

@@ -269,10 +269,13 @@ export class Object3dDeprecated {
   }
 }
 
+export type FileTrigger = "FETCH" | "SUB";
+
 export type File = {
   relativePath: string; // usually relativePathToFile + filename + filetype
   fileName: string; // for something like "foo/bar.txt" -> "bar.txt"
   fileType: string; // for something like "bar.txt" -> .txt
+  trigger: FileTrigger;
   data: ObjData;
 };
 

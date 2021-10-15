@@ -19,6 +19,10 @@ export class VertexBuffer<T extends number[]> implements CustomVertexBuffer<T> {
     this.items = this.items.concat(items);
   }
 
+  public setItems(items: T[]) {
+    this.items = items;
+  }
+
   public getItems() {
     return this.items;
   }

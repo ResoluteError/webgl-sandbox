@@ -32,7 +32,7 @@ io.of("/files").on("connection", (socket) => {
   });
 
   socket.on("file_fetch", ({ filepath }) => {
-    fileManager.readFile(filepath, (err, file) => {
+    fileManager.fetchFile(filepath, (err, file) => {
       if (err) {
         return socket.emit("file_error", err.message);
       }
@@ -44,7 +44,7 @@ io.of("/files").on("connection", (socket) => {
   });
 
   socket.on("file_fetch_and_sub", ({ filepath }) => {
-    fileManager.readFile(filepath, (err, file) => {
+    fileManager.fetchFile(filepath, (err, file) => {
       if (err) {
         return socket.emit("file_error", err);
       }
