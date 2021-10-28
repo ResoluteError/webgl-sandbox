@@ -1,11 +1,6 @@
+import fs from "fs";
 import { Observable, of, throttleTime } from "rxjs";
-import { ObjData } from "./ObjParser";
-import {
-  getFileChanges,
-  getFileMeta,
-  getFilesRecursive,
-  readFile,
-} from "./utils/FileUtils";
+import { getFileChanges, getFileMeta, readFile } from "./utils/FileUtils";
 
 export type FileTrigger = "FETCH" | "SUB";
 
@@ -14,7 +9,7 @@ export type File = {
   fileName: string; // for something like "foo/bar.txt" -> "bar.txt"
   fileType: string; // for something like "bar.txt" -> .txt
   trigger: FileTrigger;
-  data: Buffer | ObjData;
+  data: Buffer;
 };
 
 export class FileManager {
@@ -28,7 +23,7 @@ export class FileManager {
   }
 
   private initFileWatchers() {
-    getFilesRecursive(this.baseDir, (filepath: string) => {
+    this.getFilesRecursive(this.baseDir, (filepath: string) => {
       const { relativePath, fileName, fileType } = getFileMeta(
         this.baseDir,
         filepath
@@ -74,6 +69,28 @@ export class FileManager {
         fileType,
         data,
         trigger: "FETCH",
+      });
+    });
+  }
+
+  private getFilesRecursive(dir: string, cb: (filename: string) => void) {
+    fs.readdir(dir, (err, files) => {
+      if (err) {
+        console.error(`Error reading dir: ${dir}`);
+        throw err;
+      }
+      files.forEach((filename) => {
+        const path = `${dir}/${filename}`;
+        fs.lstat(path, (err, stats) => {
+          if (err) {
+            console.error(`Error getting lstaf of ${path}: `, err);
+            throw err;
+          }
+          if (stats.isDirectory()) {
+            return this.getFilesRecursive(path, cb);
+          }
+          cb(path);
+        });
       });
     });
   }
