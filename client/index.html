@@ -9,6 +9,20 @@
     <link rel="stylesheet" href="index.css" />
   </head>
   <body>
+    <!-- Debug Elements -->
+    <label class="debug-switch">
+      <input type="checkbox" id="debug-switch-value" />
+      <span class="slider round"></span>
+    </label>
+    <div id="debug-info" class="hidden">
+      <!-- Include a header DIV with the same name as the draggable DIV, followed by "header" -->
+      <div id="debug-header">Debug</div>
+      <dig id="debug-body">
+        <p>....</p>
+      </dig>
+    </div>
+    <script src="./app.js"></script>
+    <!-- Canvas -->
     <canvas id="glcanvas" width="640" height="480"></canvas>
   </body>
 </html>

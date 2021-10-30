@@ -27,14 +27,17 @@ export class AssetManager {
       });
 
       this.socket.on("asset_data", (asset: AssetData) => {
+        if (assetName !== asset.name) return;
         this.assets[asset.name] = new Asset3D(this.gl, asset);
         sub.next({ asset: this.assets[asset.name], type: "CREATE" });
       });
       this.socket.on("asset_update", (asset: AssetData) => {
+        if (assetName !== asset.name) return;
         this.assets[asset.name].put(asset);
         sub.next({ asset: this.assets[asset.name], type: "UPDATE" });
       });
       this.socket.on("asset_error", (err) => {
+        // TODO: Log error only once
         sub.error(err);
       });
     });

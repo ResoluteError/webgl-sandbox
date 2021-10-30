@@ -37,7 +37,7 @@ export class FileManager {
     var loadedObject = true;
     return new Promise((res, rej) => {
       console.log("Loading object");
-      const obj = new Object3D(this.gl);
+      const obj = new Object3D(this.gl, "dummy");
       this.load(objFilePath, watch).subscribe((objFile) => {
         console.log("Found object");
         if (objFile.fileType.toLowerCase() != "obj") {

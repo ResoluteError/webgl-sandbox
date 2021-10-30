@@ -73,7 +73,9 @@ export class GameLoop {
   }
 
   async start() {
-    window.requestAnimationFrame(this.nextFrame.bind(this));
+    this.nextFrame(Date.now());
+    // using rAF seems to slow down the framerate during rapid mouse movement
+    // window.requestAnimationFrame((timestamp) => this.nextFrame(timestamp));
   }
 
   nextFrame(timestamp: number) {
@@ -84,12 +86,14 @@ export class GameLoop {
     this.keyboardManager.executeActions();
     this.renderer.preRender(timestamp);
     this.renderer.clear();
-    this.renderer.render();
+    this.renderer.render(timestamp);
     this.renderer.postRender(timestamp + Date.now() - frameStartTime);
     const nextFrameWaitTime = this.maxMSpF - (Date.now() - frameStartTime);
     this.nextFrameTimerId = window.setTimeout(
       () => {
-        window.requestAnimationFrame(this.nextFrame.bind(this));
+        this.nextFrame(Date.now());
+        // using rAF seems to slow down the framerate during rapid mouse movement
+        // window.requestAnimationFrame((timestamp) => this.nextFrame(timestamp));
       },
       nextFrameWaitTime > 0 ? nextFrameWaitTime : 0
     );

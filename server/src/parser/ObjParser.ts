@@ -32,6 +32,20 @@ export class ObjParser {
   private texturesIndex: Map<number[]> = {};
   private materials: Map<string[]> = {};
   private smoothShading: Map<boolean> = {};
+  /**
+   * obj files keep a running index across all vertex positions, texture positions and
+   * normals respectively across all objects. The obj parser treats each obj individually,
+   * therefore the index values are decreased by the offset of the previous objects
+   */
+  private indexOffsets: {
+    positions: number;
+    normals: number;
+    textures: number;
+  } = {
+    positions: 0,
+    normals: 0,
+    textures: 0,
+  };
 
   public parse(data: Buffer): Map<Obj> {
     const dataStr = data.toString("utf8");
@@ -60,6 +74,7 @@ export class ObjParser {
   }
 
   private getObject(data: string[]) {
+    const previousObj = this.currentObject;
     this.currentObject = data[0];
     this.objects.push(this.currentObject);
     this.vertexPositions[this.currentObject] = [];
@@ -70,6 +85,12 @@ export class ObjParser {
     this.texturesIndex[this.currentObject] = [];
     this.materials[this.currentObject] = [];
     this.smoothShading[this.currentObject] = false;
+    if (previousObj) {
+      this.indexOffsets.normals += this.vertexNormals[previousObj].length;
+      this.indexOffsets.positions += this.vertexPositions[previousObj].length;
+      this.indexOffsets.textures +=
+        this.vertexTexturePositions[previousObj].length;
+    }
   }
 
   private getVertexPositions(data: string[]) {
@@ -88,11 +109,23 @@ export class ObjParser {
   }
 
   private getTriangleIndeces(vertices: string[]) {
+    if (vertices.length > 3) {
+      console.error(
+        `${this.currentObject} has non-triangulated surfaces! Aborting Parsing!`
+      );
+      throw new Error(`{this.currentObject} has non-triangulated surfaces!`);
+    }
     vertices.forEach((vertex) => {
       const [posIndex, textIndex, normIndex] = vertex.split("/");
-      this.positionsIndex[this.currentObject].push(+posIndex - 1);
-      this.texturesIndex[this.currentObject].push(+textIndex - 1);
-      this.normalsIndex[this.currentObject].push(+normIndex - 1);
+      this.positionsIndex[this.currentObject].push(
+        +posIndex - 1 - this.indexOffsets.positions
+      );
+      this.texturesIndex[this.currentObject].push(
+        +textIndex - 1 - this.indexOffsets.textures
+      );
+      this.normalsIndex[this.currentObject].push(
+        +normIndex - 1 - this.indexOffsets.normals
+      );
     });
   }
 

@@ -7,6 +7,7 @@ import { Camera } from "../../game/Camera";
 import { Light } from "../../objects/Light";
 import { mat3, mat4, vec3 } from "gl-matrix";
 import { Asset3D } from "../../objects/Asset3D";
+import { Debug } from "../../debug/Debugger";
 
 export class Renderer {
   private gl: WebGL2RenderingContext;
@@ -41,7 +42,7 @@ export class Renderer {
     this.activeVao = new VertexArrayObject(this.gl, this.activeShaderProgram);
     this.light = new Light(
       gl,
-      vec3.fromValues(3, 1, 2),
+      vec3.fromValues(3, 3, 5),
       1,
       vec3.fromValues(1, 1, 1)
     );
@@ -103,9 +104,11 @@ export class Renderer {
     this.activeCamera.beforeNextFrame();
   }
 
-  public render() {
+  public render(timestamp: number) {
     if (!this.activeCamera)
       throw new Error("Camera is required for Renderer.render()");
+
+    Debug.logFrame(timestamp);
 
     const { projectionMatrix, viewMatrix } = this.activeCamera.getMatrices();
     this.activeShaderProgram.setUniformMatrix4fv(
@@ -124,13 +127,13 @@ export class Renderer {
     );
     this.objects.forEach((obj) => this.renderObject(obj));
     this.assets.forEach((asset) => this.renderAsset(asset));
+    Debug.render();
   }
 
   private renderObject(obj: Object3D, modelMatrix?: mat4, normMatrix?: mat3) {
+    // console.log("Rendering: ", obj.getName());
     if (obj === null || !obj.getIsRenderable()) return;
-    if (!this.activeVao.getHasBoundBuffers()) {
-      this.activeVao.bindObject(obj);
-    }
+    this.activeVao.bindObject(obj);
     this.activeShaderProgram.useProgram();
     this.activeShaderProgram.setUniformMatrix4fv(
       "uModelMatrix",
@@ -165,9 +168,9 @@ export class Renderer {
     var normMatrix = asset.getNormalMatrix();
     var modelMatrix = asset.getModelMatrix();
 
-    asset
-      .getObjects()
-      .forEach((obj) => this.renderObject(obj, modelMatrix, normMatrix));
+    asset.getObjects().forEach((obj) => {
+      this.renderObject(obj, modelMatrix, normMatrix);
+    });
   }
 
   public postRender(timestamp: number) {

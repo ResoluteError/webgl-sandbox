@@ -8,6 +8,8 @@ import { Animatable } from "./base/Animatable";
 export class Object3D extends Animatable {
   private gl: WebGL2RenderingContext;
 
+  private name: string;
+
   private vertexPositionsBuffer: VertexBuffer<num3>;
   private vertexNormalsBuffer: VertexBuffer<num3>;
   private vertexColorsBuffer: VertexBuffer<num4>;
@@ -23,8 +25,9 @@ export class Object3D extends Animatable {
 
   private isRenderable: boolean;
 
-  constructor(gl: WebGL2RenderingContext) {
+  constructor(gl: WebGL2RenderingContext, name: string) {
     super();
+    this.name = name;
     this.gl = gl;
     this.vertexPositionsBuffer = new VertexBuffer<num3>(gl);
     this.vertexTexturePositionsBuffer = new VertexBuffer<num2>(gl);
@@ -77,8 +80,13 @@ export class Object3D extends Animatable {
   }
 
   private createVertexTexturePositionsBufferLayout() {
+    console.log("Creating vertex texture positions buffer");
     this.vertexTexturePositionsBufferLayout = new VertexBufferLayout(this.gl);
     this.vertexTexturePositionsBufferLayout.push(FLOAT, 2, 2, 0, "u_texpos");
+  }
+
+  public getName() {
+    return this.name;
   }
 
   public create(
@@ -111,13 +119,14 @@ export class Object3D extends Animatable {
   public setTexture(textureImage: Buffer, texPos: num2[]) {
     this.texture = this.gl.createTexture();
     imageFromBuffer(textureImage).then((img) => {
+      console.log("Loaded image");
       this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);
       this.gl.texImage2D(
         this.gl.TEXTURE_2D,
         0,
         this.gl.RGBA8,
-        256,
-        256,
+        img.width,
+        img.height,
         0,
         this.gl.RGBA,
         this.gl.UNSIGNED_BYTE,

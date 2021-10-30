@@ -50,23 +50,23 @@ export class VertexArrayObject {
 
   public bindObject(obj: Object3D) {
     this.bind();
-    if (!this.hasBoundBuffers) {
-      const {
-        vertexPositionsBuffer,
-        vertexNormalsBuffer,
-        indexBuffer,
-        vertexColorsBuffer,
-        vertexTexturePositionsBuffer,
-      } = obj.getBuffers();
-      const {
-        vertexPositionBufferLayout,
-        vertexNormalsBufferLayout,
-        vertexColorsBufferLayout,
-        vertexTexturePositionsBufferLayout,
-      } = obj.getBufferLayouts();
-      this.addBuffer(vertexPositionsBuffer, vertexPositionBufferLayout);
-      this.addBuffer(vertexNormalsBuffer, vertexNormalsBufferLayout);
-      this.addBuffer(vertexColorsBuffer, vertexColorsBufferLayout);
+    const {
+      vertexPositionsBuffer,
+      vertexNormalsBuffer,
+      indexBuffer,
+      vertexColorsBuffer,
+      vertexTexturePositionsBuffer,
+    } = obj.getBuffers();
+    const {
+      vertexPositionBufferLayout,
+      vertexNormalsBufferLayout,
+      vertexColorsBufferLayout,
+      vertexTexturePositionsBufferLayout,
+    } = obj.getBufferLayouts();
+    this.addBuffer(vertexPositionsBuffer, vertexPositionBufferLayout);
+    this.addBuffer(vertexNormalsBuffer, vertexNormalsBufferLayout);
+    this.addBuffer(vertexColorsBuffer, vertexColorsBufferLayout);
+    if (vertexTexturePositionsBuffer && vertexTexturePositionsBufferLayout) {
       this.addBuffer(
         vertexTexturePositionsBuffer,
         vertexTexturePositionsBufferLayout
@@ -74,10 +74,6 @@ export class VertexArrayObject {
       indexBuffer.bind();
       this.hasBoundBuffers = true;
     }
-  }
-
-  public getHasBoundBuffers() {
-    return this.hasBoundBuffers;
   }
 
   // public debug() {
