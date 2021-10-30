@@ -5,10 +5,12 @@ import { coloredVertexShaderSource } from "../../../resources/shaders/coloredVer
 import { coloredFragmentShaderSource } from "../../../resources/shaders/coloredFragmentShader.source";
 import { Camera } from "../../game/Camera";
 import { Light } from "../../objects/Light";
-import { vec3 } from "gl-matrix";
+import { mat3, mat4, vec3 } from "gl-matrix";
+import { Asset3D } from "../../objects/Asset3D";
 
 export class Renderer {
   private gl: WebGL2RenderingContext;
+  private assets: Asset3D[];
   private objects: Object3D[];
   // private vaos: VertexArrayObject[];
   private activeVao: VertexArrayObject;
@@ -21,6 +23,7 @@ export class Renderer {
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl;
     this.objects = [];
+    this.assets = [];
     // this.vaos = [];
     // this.cameras = [];
     // this.shaderPrograms = [];
@@ -38,7 +41,7 @@ export class Renderer {
     this.activeVao = new VertexArrayObject(this.gl, this.activeShaderProgram);
     this.light = new Light(
       gl,
-      vec3.fromValues(0, 0, 4),
+      vec3.fromValues(3, 1, 2),
       1,
       vec3.fromValues(1, 1, 1)
     );
@@ -77,9 +80,16 @@ export class Renderer {
     this.activeCamera = camera;
   }
 
+  public addAsset(asset: Asset3D): number {
+    return this.assets.push(asset) - 1;
+  }
+
+  public removeAsset(id: number): void {
+    this.assets[id] = null;
+  }
+
   public addObject(obj: Object3D): number {
-    this.objects.push(obj);
-    return this.objects.length - 1;
+    return this.objects.push(obj) - 1;
   }
 
   public removeObject(id: number): void {
@@ -87,7 +97,7 @@ export class Renderer {
   }
 
   public preRender(timestamp: number) {
-    this.objects.forEach((obj, i) => {
+    this.objects.forEach((obj) => {
       obj.preRender(timestamp);
     });
     this.activeCamera.beforeNextFrame();
@@ -112,30 +122,56 @@ export class Renderer {
       "u_LightPos",
       this.light.getPosition()
     );
-    this.objects.forEach((obj, i) => {
-      if (obj === null || !obj.getIsRenderable()) return;
-      if (!this.activeVao.getHasBoundBuffers()) {
-        this.activeVao.bindObject(obj);
-      }
-      this.activeShaderProgram.useProgram();
-      this.activeShaderProgram.setUniformMatrix4fv(
-        "uModelMatrix",
-        obj.getModelMatrix()
-      );
-      this.activeShaderProgram.setUniformMatrix3fv(
-        "u_NormalMatrix",
-        obj.getNormalMatrix()
-      );
+    this.objects.forEach((obj) => this.renderObject(obj));
+    this.assets.forEach((asset) => this.renderAsset(asset));
+  }
+
+  private renderObject(obj: Object3D, modelMatrix?: mat4, normMatrix?: mat3) {
+    if (obj === null || !obj.getIsRenderable()) return;
+    if (!this.activeVao.getHasBoundBuffers()) {
+      this.activeVao.bindObject(obj);
+    }
+    this.activeShaderProgram.useProgram();
+    this.activeShaderProgram.setUniformMatrix4fv(
+      "uModelMatrix",
+      modelMatrix || obj.getModelMatrix()
+    );
+    this.activeShaderProgram.setUniformMatrix3fv(
+      "u_NormalMatrix",
+      normMatrix || obj.getNormalMatrix()
+    );
+    if (obj.getImageTexture()) {
+      // TODO: Support for multiple textures
+      this.gl.activeTexture(this.gl.TEXTURE0);
+      this.gl.bindTexture(this.gl.TEXTURE_2D, obj.getImageTexture());
+    }
+    if (obj.getIndexBufferSize()) {
       this.gl.drawElements(
         this.gl.TRIANGLES,
         obj.getIndexBufferSize(),
         this.gl.UNSIGNED_INT,
         0
       );
-    });
+    } else {
+      this.gl.drawArrays(
+        this.gl.TRIANGLES,
+        0,
+        obj.getBuffers().vertexPositionsBuffer.getSize()
+      );
+    }
+  }
+
+  private renderAsset(asset: Asset3D) {
+    var normMatrix = asset.getNormalMatrix();
+    var modelMatrix = asset.getModelMatrix();
+
+    asset
+      .getObjects()
+      .forEach((obj) => this.renderObject(obj, modelMatrix, normMatrix));
   }
 
   public postRender(timestamp: number) {
     this.objects.forEach((obj) => obj.postRender(timestamp));
+    this.assets.forEach((asset) => asset.postRender(timestamp));
   }
 }

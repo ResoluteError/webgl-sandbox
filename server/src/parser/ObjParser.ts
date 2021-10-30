@@ -45,7 +45,6 @@ export class ObjParser {
         console.warn("OBJ Parsing Error: ", err);
       }
     }
-    console.log("Objects: ", this.objects);
     this.objects.forEach((object) => this.expandVertexInfo(object));
     var result: Map<Obj> = {};
     this.objects.forEach(
@@ -119,9 +118,6 @@ export class ObjParser {
    * all indexes are dropped and positions, normals and textures are expanded.
    */
   private expandVertexInfo(object: string) {
-    console.log("expandVertexInfo for object: ", object);
-    console.log(this.positionsIndex);
-
     var posIndeces = this.positionsIndex[object];
     var normIndeces = this.normalsIndex[object];
     var texIndeces = this.texturesIndex[object];

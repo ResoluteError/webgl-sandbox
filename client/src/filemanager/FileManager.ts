@@ -1,7 +1,6 @@
 import { Manager, Socket } from "socket.io-client";
-import { File } from "../objects/Object3D-deprecated";
 import { Observable } from "rxjs";
-import { Object3D } from "../objects/Object3D";
+import { num2, num3, Object3D } from "../objects/Object3D";
 
 export class FileManager {
   private gl: WebGL2RenderingContext;
@@ -68,3 +67,20 @@ export class FileManager {
     });
   }
 }
+
+export type FileTrigger = "FETCH" | "SUB";
+
+export type File = {
+  relativePath: string; // usually relativePathToFile + filename + filetype
+  fileName: string; // for something like "foo/bar.txt" -> "bar.txt"
+  fileType: string; // for something like "bar.txt" -> .txt
+  trigger: FileTrigger;
+  data: ObjData;
+};
+
+export type ObjData = {
+  vertexPositions: num3[]; // (x,y,z)       | len: x
+  vertexNormals: num3[]; // (~>x, ~>y, ~>z) | len: x
+  vertexTexturePositions: num2[]; // (u,v)          | len: x
+  positionIndex: number[];
+};

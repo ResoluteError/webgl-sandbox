@@ -31,7 +31,7 @@ io.of("/assets").on("connection", (socket) => {
   socket.on("asset_sub", ({ assetName }) => {
     assetManager.getAssetObservable(assetName).subscribe({
       next: (asset) => {
-        socket.emit("asset_data", asset);
+        socket.emit("asset_update", asset);
       },
       error: (err) => {
         console.error(`Error on asset '${assetName}' update: `, err);
@@ -44,7 +44,7 @@ io.of("/assets").on("connection", (socket) => {
   socket.on("asset_fetch_and_sub", ({ assetName }) => {
     assetManager.getAssetObservable(assetName).subscribe({
       next: (asset) => {
-        socket.emit("asset_data", asset);
+        socket.emit("asset_update", asset);
       },
       error: (err) => {
         console.error(`Error on asset '${assetName}' update: `, err);

@@ -56,15 +56,21 @@ export class VertexArrayObject {
         vertexNormalsBuffer,
         indexBuffer,
         vertexColorsBuffer,
+        vertexTexturePositionsBuffer,
       } = obj.getBuffers();
       const {
         vertexPositionBufferLayout,
         vertexNormalsBufferLayout,
         vertexColorsBufferLayout,
+        vertexTexturePositionsBufferLayout,
       } = obj.getBufferLayouts();
       this.addBuffer(vertexPositionsBuffer, vertexPositionBufferLayout);
       this.addBuffer(vertexNormalsBuffer, vertexNormalsBufferLayout);
       this.addBuffer(vertexColorsBuffer, vertexColorsBufferLayout);
+      this.addBuffer(
+        vertexTexturePositionsBuffer,
+        vertexTexturePositionsBufferLayout
+      );
       indexBuffer.bind();
       this.hasBoundBuffers = true;
     }

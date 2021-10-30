@@ -2,6 +2,7 @@ import { FLOAT } from "../opengl/abstractions/Constants";
 import { IndexBuffer } from "../opengl/buffers/IndexBuffer";
 import { VertexBuffer } from "../opengl/buffers/VertexBuffer";
 import { VertexBufferLayout } from "../opengl/buffers/VertexBufferLayout";
+import { imageFromBuffer } from "../utils/Image";
 import { Animatable } from "./base/Animatable";
 
 export class Object3D extends Animatable {
@@ -10,9 +11,13 @@ export class Object3D extends Animatable {
   private vertexPositionsBuffer: VertexBuffer<num3>;
   private vertexNormalsBuffer: VertexBuffer<num3>;
   private vertexColorsBuffer: VertexBuffer<num4>;
+  private vertexTexturePositionsBuffer: VertexBuffer<num2>;
   private indexBuffer: IndexBuffer;
 
+  private texture: WebGLTexture;
+
   private vertexPositionBufferLayout: VertexBufferLayout;
+  private vertexTexturePositionsBufferLayout: VertexBufferLayout;
   private vertexNormalsBufferLayout: VertexBufferLayout;
   private vertexColorsBufferLayout: VertexBufferLayout;
 
@@ -22,6 +27,7 @@ export class Object3D extends Animatable {
     super();
     this.gl = gl;
     this.vertexPositionsBuffer = new VertexBuffer<num3>(gl);
+    this.vertexTexturePositionsBuffer = new VertexBuffer<num2>(gl);
     this.vertexNormalsBuffer = new VertexBuffer<num3>(gl);
     this.vertexColorsBuffer = new VertexBuffer<num4>(gl);
     this.indexBuffer = new IndexBuffer(gl);
@@ -50,6 +56,11 @@ export class Object3D extends Animatable {
     this.vertexColorsBuffer.bufferData();
   }
 
+  public setVertexTexturePositions(texturePositions: num2[]) {
+    this.vertexTexturePositionsBuffer.setItems(texturePositions);
+    this.vertexTexturePositionsBuffer.bufferData();
+  }
+
   private createVertexPositionBufferLayout() {
     this.vertexPositionBufferLayout = new VertexBufferLayout(this.gl);
     this.vertexPositionBufferLayout.push(FLOAT, 3, 3, 0, "a_position");
@@ -65,29 +76,84 @@ export class Object3D extends Animatable {
     this.vertexColorsBufferLayout.push(FLOAT, 4, 4, 0, "a_color");
   }
 
+  private createVertexTexturePositionsBufferLayout() {
+    this.vertexTexturePositionsBufferLayout = new VertexBufferLayout(this.gl);
+    this.vertexTexturePositionsBufferLayout.push(FLOAT, 2, 2, 0, "u_texpos");
+  }
+
   public create(
     positions: num3[],
-    normals: num3[],
-    colors: num4[] | null,
-    indeces: number[]
+    normals: num3[] | null,
+    colors?: num4[],
+    indeces?: number[]
   ) {
     this.setVertexPositions(positions);
-    this.setIndeces(indeces);
-    this.setNormals(normals);
-    this.createVertexNormalsBufferLayout();
     this.createVertexPositionBufferLayout();
+    if (indeces) {
+      this.setIndeces(indeces);
+    }
+    if (normals) {
+      this.setNormals(normals);
+      this.createVertexNormalsBufferLayout();
+    }
     if (!colors) {
       colors = normals.map((norm) =>
-        norm[2] > 0 ? [1.0, 0, 0, 1.0] : [0.0, 0, 1.0, 1.0]
+        norm[2] > 0 ? [1.0, 0, 0, 1] : [0.0, 0, 1.0, 1.0]
       );
     }
-    this.setVertexColors(colors);
-    this.createVertexColorsBufferLayout();
+    if (colors) {
+      this.setVertexColors(colors);
+      this.createVertexColorsBufferLayout();
+    }
     this.isRenderable = true;
+  }
+
+  public setTexture(textureImage: Buffer, texPos: num2[]) {
+    this.texture = this.gl.createTexture();
+    imageFromBuffer(textureImage).then((img) => {
+      this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);
+      this.gl.texImage2D(
+        this.gl.TEXTURE_2D,
+        0,
+        this.gl.RGBA8,
+        256,
+        256,
+        0,
+        this.gl.RGBA,
+        this.gl.UNSIGNED_BYTE,
+        img
+      );
+      this.gl.texParameteri(
+        this.gl.TEXTURE_2D,
+        this.gl.TEXTURE_MAG_FILTER,
+        this.gl.LINEAR
+      );
+      this.gl.texParameteri(
+        this.gl.TEXTURE_2D,
+        this.gl.TEXTURE_MIN_FILTER,
+        this.gl.LINEAR
+      );
+      this.gl.texParameteri(
+        this.gl.TEXTURE_2D,
+        this.gl.TEXTURE_WRAP_S,
+        this.gl.CLAMP_TO_EDGE
+      );
+      this.gl.texParameteri(
+        this.gl.TEXTURE_2D,
+        this.gl.TEXTURE_WRAP_T,
+        this.gl.CLAMP_TO_EDGE
+      );
+      this.setVertexTexturePositions(texPos);
+      this.createVertexTexturePositionsBufferLayout();
+    });
   }
 
   public getIsRenderable() {
     return this.isRenderable;
+  }
+
+  public getImageTexture() {
+    return this.texture;
   }
 
   public getBuffers() {
@@ -96,6 +162,7 @@ export class Object3D extends Animatable {
       vertexNormalsBuffer: this.vertexNormalsBuffer,
       indexBuffer: this.indexBuffer,
       vertexColorsBuffer: this.vertexColorsBuffer,
+      vertexTexturePositionsBuffer: this.vertexTexturePositionsBuffer,
     };
   }
 
@@ -104,6 +171,8 @@ export class Object3D extends Animatable {
       vertexPositionBufferLayout: this.vertexPositionBufferLayout,
       vertexNormalsBufferLayout: this.vertexNormalsBufferLayout,
       vertexColorsBufferLayout: this.vertexColorsBufferLayout,
+      vertexTexturePositionsBufferLayout:
+        this.vertexTexturePositionsBufferLayout,
     };
   }
 

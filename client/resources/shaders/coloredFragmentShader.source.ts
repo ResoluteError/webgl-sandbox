@@ -3,6 +3,7 @@ precision highp float;
 in vec4 v_color;
 in vec3 v_normal;
 in vec3 v_fragPos;
+in vec2 v_texCoord;
 
 out vec4 outColor;
 
@@ -12,11 +13,11 @@ uniform mat3 u_NormalMatrix;
 
 void main() {
   float ambient = 0.2;
+  vec4 imgColor = texture(u_Texture, v_texCoord);
   vec3 norm = normalize(u_NormalMatrix * v_normal);
   vec3 lightDir = normalize(u_LightPos - v_fragPos);
-  float diff = ambient + max(dot(norm, lightDir), 0.0);
-  vec4 result = vec4(diff * vec3(v_color), 1.0);
-  vec4 result2 = vec4(diff * vec3(1.0, 1.0, 1.0), 1.0);
+  float diff = ambient + max(dot(norm, lightDir), 0.0) * (1.0 - ambient);
+  vec4 result = vec4(diff * vec3(imgColor), imgColor.w);
   outColor = result;
 }
 `;

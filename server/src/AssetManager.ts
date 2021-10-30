@@ -1,5 +1,5 @@
 import fs from "fs";
-import { mergeMap, Observable } from "rxjs";
+import { mergeMap, Observable, throttleTime } from "rxjs";
 import { AssetData } from "../../contracts/models/ObjData.type";
 import { MtlParser } from "./parser/MtlParser";
 import { ObjParser } from "./parser/ObjParser";
@@ -38,9 +38,6 @@ export class ObjAssetManager {
         this.watchedAssets.push(assetName);
         this.assetPaths[assetName] = assetPath;
         this.assetWatchers[assetName] = this.watchAsset(assetName);
-        this.fetchAsset(this.watchedAssets[0]).then((asset) => {
-          console.log(asset);
-        });
       }
     );
   }
@@ -50,8 +47,7 @@ export class ObjAssetManager {
   }
 
   public fetchAsset(assetName: string): Promise<AssetData> {
-    console.log("AssetName: ", assetName);
-    console.log("AssetPaths: ", this.assetPaths);
+    console.log("Fetching asset: ", assetName);
     const mtlParser: MtlParser = new MtlParser();
     const objParser: ObjParser = new ObjParser();
     return getFilesInDirToPromise(this.assetPaths[assetName])
@@ -70,6 +66,7 @@ export class ObjAssetManager {
 
   private watchAsset(assetName: string): Observable<AssetData> {
     return getDirChangesToObservable(this.assetPaths[assetName]).pipe(
+      throttleTime(2000),
       mergeMap((_path) => this.fetchAsset(assetName))
     );
   }

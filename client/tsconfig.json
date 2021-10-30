@@ -12,6 +12,6 @@
     "esModuleInterop" : true,
     "downlevelIteration": true
   },
-  "include": ["src/**/*", "resources/**/*.ts", "resources/objects/heart.obj"],
+  "include": ["src/**/*", "resources/**/*.ts", "resources/objects/heart.obj", "../contracts/**/*"],
   "exclude": ["node_modules", "**/*.spec.ts"]
 }

@@ -16,10 +16,7 @@ export function getFileChanges(
  */
 export function getDirChangesToObservable(path: string): Observable<string> {
   return new Observable((sub) => {
-    fs.watch(path, (err, file) => {
-      if (err) {
-        return sub.error(err);
-      }
+    fs.watch(path, (_type, _file) => {
       sub.next(path);
     });
   });

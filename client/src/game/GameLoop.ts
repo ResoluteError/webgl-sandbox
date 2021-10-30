@@ -5,6 +5,7 @@ import { Camera } from "./Camera";
 import { KEYBOARD_MAP } from "./keyboard/KeyboardMap";
 import { WindowManager } from "./window/WindowManager";
 import { Object3D } from "../objects/Object3D";
+import { Asset3D } from "../objects/Asset3D";
 
 export class GameLoop {
   maxFps: number;
@@ -37,8 +38,8 @@ export class GameLoop {
     return this.gl;
   }
 
-  addObjectToScene(obj: Object3D): number {
-    return this.renderer.addObject(obj);
+  addAssetToScene(asset: Asset3D): number {
+    return this.renderer.addAsset(asset);
   }
 
   removeObjectFromScene(id: number): void {
