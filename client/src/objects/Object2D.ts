@@ -1,11 +1,11 @@
 import { mat4, vec3 } from "gl-matrix";
-import { FLOAT } from "../opengl/abstractions/Constants";
-import { IndexBuffer } from "../opengl/buffers/IndexBuffer";
-import { VertexBuffer } from "../opengl/buffers/VertexBuffer";
-import { VertexBufferLayout } from "../opengl/buffers/VertexBufferLayout";
-import { ShaderProgram } from "../opengl/shaders/ShaderProgram";
-import { TextureMapper } from "../opengl/textures/TextureMapper";
-import { VertexArrayObject } from "../opengl/vertexArrayObject/VertexArrayObject";
+import { FLOAT } from "../webgl/abstractions/Constants";
+import { IndexBuffer } from "../webgl/buffers/IndexBuffer";
+import { VertexBuffer } from "../webgl/buffers/VertexBuffer";
+import { VertexBufferLayout } from "../webgl/buffers/VertexBufferLayout";
+import { ShaderProgram } from "../webgl/shaders/ShaderProgram";
+import { TextureMapper } from "../webgl/textures/TextureMapper";
+import { VertexArrayObject } from "../webgl/vertexArrayObject/VertexArrayObject";
 import {
   CustomAnimation,
   ScaleAnimation,
@@ -26,9 +26,7 @@ export class Object2D {
   private vao: VertexArrayObject;
   private texIndex: number;
 
-  private animations: { [id: number]: CustomAnimation };
-  private animationIds: number[];
-  private animCounter: number;
+  private animations: CustomAnimation[];
 
   private rotationAndtranslationMatrix: mat4;
   private scaleMatrix: mat4;
@@ -42,9 +40,7 @@ export class Object2D {
     this.texIndex = 0;
     this.rotationAndtranslationMatrix = mat4.create();
     this.scaleMatrix = mat4.create();
-    this.animations = {};
-    this.animationIds = [];
-    this.animCounter = 0;
+    this.animations = [];
   }
 
   public setVertexPositions(positions: [number, number][]): void {
@@ -117,17 +113,10 @@ export class Object2D {
       window.setTimeout(() => {
         this.addAnimation(
           new TranslateAnimation(
-            this.animCounter,
             this.rotationAndtranslationMatrix,
             vector,
             durationMs,
-            (id: number) => {
-              this.animations[id] = null;
-              this.animationIds.splice(
-                this.animationIds.findIndex((animId) => animId === id),
-                1
-              );
-            }
+            () => {}
           )
         );
       }, delay);
@@ -151,20 +140,7 @@ export class Object2D {
       this.scaleInProgress;
       window.setTimeout(() => {
         this.addAnimation(
-          new ScaleAnimation(
-            this.animCounter,
-            this.scaleMatrix,
-            factor,
-            durationMs,
-            (id: number) => {
-              this.scaleInProgress = false;
-              this.animations[id] = null;
-              this.animationIds.splice(
-                this.animationIds.findIndex((animId) => animId === id),
-                1
-              );
-            }
-          )
+          new ScaleAnimation(this.scaleMatrix, factor, durationMs, () => {})
         );
       }, delay);
       return;
@@ -194,15 +170,10 @@ export class Object2D {
   }
 
   public addAnimation(animation: CustomAnimation) {
-    this.animations[this.animCounter] = animation;
-    this.animationIds.push(this.animCounter);
-    this.animCounter++;
+    this.animations.push(animation);
   }
 
-  public postRender(timestamp: number) {
-    this.animationIds.forEach((animationId) => {
-      if (this.animations[animationId])
-        this.animations[animationId].animate(timestamp);
-    });
+  public postRender(_timestamp: number) {
+    this.animations = this.animations.filter((anim) => !anim.isCompleted());
   }
 }

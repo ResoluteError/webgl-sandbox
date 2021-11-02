@@ -1,10 +1,9 @@
-import { Renderer } from "../opengl/renderer/Renderer";
-import { ViewMatrix } from "../opengl/matrices/ViewMatrix";
+import { Renderer } from "../webgl/renderer/Renderer";
+import { ViewMatrix } from "../webgl/matrices/ViewMatrix";
 import { KeyboardManager } from "./keyboard/KeyboardManager";
 import { Camera } from "./Camera";
 import { KEYBOARD_MAP } from "./keyboard/KeyboardMap";
 import { WindowManager } from "./window/WindowManager";
-import { Object3D } from "../objects/Object3D";
 import { Asset3D } from "../objects/Asset3D";
 
 export class GameLoop {

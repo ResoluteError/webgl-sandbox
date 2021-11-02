@@ -19,10 +19,7 @@ class Debugger extends FrameLogger {
       var ele = document.getElementById("debug-body") as HTMLDivElement;
       if (ele) {
         this.htmlElement = ele;
-        console.log("debug ele: ", ele);
         clearInterval(poller);
-      } else {
-        console.log("debug ele not found");
       }
     }, 100);
   }

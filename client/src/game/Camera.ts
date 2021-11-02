@@ -1,5 +1,5 @@
-import { ViewMatrix } from "../opengl/matrices/ViewMatrix";
-import { ProjectionMatrix } from "../opengl/matrices/ProjectionMatrix";
+import { ViewMatrix } from "../webgl/matrices/ViewMatrix";
+import { ProjectionMatrix } from "../webgl/matrices/ProjectionMatrix";
 
 export enum CAMERA_ACTION {
   ROTATE_RIGHT,

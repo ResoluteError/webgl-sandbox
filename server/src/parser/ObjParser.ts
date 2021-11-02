@@ -94,21 +94,37 @@ export class ObjParser {
   }
 
   private getVertexPositions(data: string[]) {
+    if (!this.currentObject) {
+      console.log("No default object: getVertexPositions");
+      this.getObject(["default"]);
+    }
     const [x, y, z] = data;
     this.vertexPositions[this.currentObject].push([+x, +y, +z]);
   }
 
   private getVertexNormals(data: string[]) {
+    if (!this.currentObject) {
+      console.log("No default object: getVertexNormals");
+      this.getObject(["default"]);
+    }
     const [nx, ny, nz] = data;
     this.vertexNormals[this.currentObject].push([+nx, +ny, +nz]);
   }
 
   private getVertexTexturePositions(data: string[]) {
+    if (!this.currentObject) {
+      console.log("No default object: getVertexTexturePositions");
+      this.getObject(["default"]);
+    }
     const [tx, ty] = data;
     this.vertexTexturePositions[this.currentObject].push([+tx, +ty]);
   }
 
   private getTriangleIndeces(vertices: string[]) {
+    if (!this.currentObject) {
+      console.log("No default object: getTriangleIndeces");
+      this.getObject(["default"]);
+    }
     if (vertices.length > 3) {
       console.error(
         `${this.currentObject} has non-triangulated surfaces! Aborting Parsing!`
@@ -130,10 +146,18 @@ export class ObjParser {
   }
 
   private getSmoothShading(data: string[]) {
+    if (!this.currentObject) {
+      console.log("No default object: getSmoothShading");
+      this.getObject(["default"]);
+    }
     this.smoothShading[this.currentObject] = data[0] !== "off";
   }
 
   private getUsedMaterial(data: string[]) {
+    if (!this.currentObject) {
+      console.log("No default object: getUsedMaterial");
+      this.getObject(["default"]);
+    }
     this.materials[this.currentObject].push(data[0]);
   }
 

@@ -14,15 +14,17 @@ export class Asset3D extends Animatable {
 
   public put(assetData: AssetData) {
     let objects = Object.keys(assetData.objects);
-    console.log("Putting objects:", objects);
+    console.log(`Creating objects for Asset '${assetData.name}':`, objects);
     for (var currentObject of objects) {
       let obj: Object3D;
       if (currentObject in this.objects) {
-        console.log(`Object ${currentObject} exists, updating...`);
         obj = this.objects[currentObject];
       } else {
-        console.log(`Object ${currentObject} not found, creating new...`);
-        obj = new Object3D(this.gl, currentObject);
+        obj = new Object3D(
+          this.gl,
+          currentObject,
+          Object.keys(assetData.imageTextures).length !== 0
+        );
       }
       // TODO: This is only able to handle a single materials with a single image texture
       let primaryMaterial = assetData.objects[currentObject].materials[0];

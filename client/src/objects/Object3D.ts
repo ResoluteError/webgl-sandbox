@@ -1,7 +1,7 @@
-import { FLOAT } from "../opengl/abstractions/Constants";
-import { IndexBuffer } from "../opengl/buffers/IndexBuffer";
-import { VertexBuffer } from "../opengl/buffers/VertexBuffer";
-import { VertexBufferLayout } from "../opengl/buffers/VertexBufferLayout";
+import { FLOAT } from "../webgl/abstractions/Constants";
+import { IndexBuffer } from "../webgl/buffers/IndexBuffer";
+import { VertexBuffer } from "../webgl/buffers/VertexBuffer";
+import { VertexBufferLayout } from "../webgl/buffers/VertexBufferLayout";
 import { imageFromBuffer } from "../utils/Image";
 import { Animatable } from "./base/Animatable";
 
@@ -9,6 +9,7 @@ export class Object3D extends Animatable {
   private gl: WebGL2RenderingContext;
 
   private name: string;
+  private isTextured: boolean;
 
   private vertexPositionsBuffer: VertexBuffer<num3>;
   private vertexNormalsBuffer: VertexBuffer<num3>;
@@ -23,9 +24,10 @@ export class Object3D extends Animatable {
   private vertexNormalsBufferLayout: VertexBufferLayout;
   private vertexColorsBufferLayout: VertexBufferLayout;
 
-  private isRenderable: boolean;
+  private hasTextureLoaded: boolean;
+  private hasMeshLoaded: boolean;
 
-  constructor(gl: WebGL2RenderingContext, name: string) {
+  constructor(gl: WebGL2RenderingContext, name: string, isTextured: boolean) {
     super();
     this.name = name;
     this.gl = gl;
@@ -34,7 +36,9 @@ export class Object3D extends Animatable {
     this.vertexNormalsBuffer = new VertexBuffer<num3>(gl);
     this.vertexColorsBuffer = new VertexBuffer<num4>(gl);
     this.indexBuffer = new IndexBuffer(gl);
-    this.isRenderable = false;
+    this.hasTextureLoaded = false;
+    this.hasMeshLoaded = false;
+    this.isTextured = isTextured;
   }
 
   public setVertexPositions(positions: num3[]) {
@@ -48,13 +52,11 @@ export class Object3D extends Animatable {
   }
 
   public setNormals(normals: num3[]) {
-    console.log("Setting normals...");
     this.vertexNormalsBuffer.setItems(normals);
     this.vertexNormalsBuffer.bufferData();
   }
 
   public setVertexColors(colors: num4[]) {
-    console.log("Setting colors...");
     this.vertexColorsBuffer.setItems(colors);
     this.vertexColorsBuffer.bufferData();
   }
@@ -80,7 +82,6 @@ export class Object3D extends Animatable {
   }
 
   private createVertexTexturePositionsBufferLayout() {
-    console.log("Creating vertex texture positions buffer");
     this.vertexTexturePositionsBufferLayout = new VertexBufferLayout(this.gl);
     this.vertexTexturePositionsBufferLayout.push(FLOAT, 2, 2, 0, "u_texpos");
   }
@@ -113,13 +114,12 @@ export class Object3D extends Animatable {
       this.setVertexColors(colors);
       this.createVertexColorsBufferLayout();
     }
-    this.isRenderable = true;
+    this.hasMeshLoaded = true;
   }
 
   public setTexture(textureImage: Buffer, texPos: num2[]) {
     this.texture = this.gl.createTexture();
     imageFromBuffer(textureImage).then((img) => {
-      console.log("Loaded image");
       this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);
       this.gl.texImage2D(
         this.gl.TEXTURE_2D,
@@ -154,11 +154,12 @@ export class Object3D extends Animatable {
       );
       this.setVertexTexturePositions(texPos);
       this.createVertexTexturePositionsBufferLayout();
+      this.hasTextureLoaded = true;
     });
   }
 
   public getIsRenderable() {
-    return this.isRenderable;
+    return this.hasMeshLoaded && this.isTextured == this.hasTextureLoaded;
   }
 
   public getImageTexture() {

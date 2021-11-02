@@ -29,11 +29,13 @@ export class AssetManager {
       this.socket.on("asset_data", (asset: AssetData) => {
         if (assetName !== asset.name) return;
         this.assets[asset.name] = new Asset3D(this.gl, asset);
+        console.log(`Created asset '${asset.name}': `, asset);
         sub.next({ asset: this.assets[asset.name], type: "CREATE" });
       });
       this.socket.on("asset_update", (asset: AssetData) => {
         if (assetName !== asset.name) return;
         this.assets[asset.name].put(asset);
+        console.log(`Updated asset '${asset.name}': `, this.assets[asset.name]);
         sub.next({ asset: this.assets[asset.name], type: "UPDATE" });
       });
       this.socket.on("asset_error", (err) => {

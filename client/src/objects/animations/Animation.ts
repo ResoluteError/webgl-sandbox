@@ -3,6 +3,7 @@ import { mat4, vec3 } from "gl-matrix";
 export interface CustomAnimation {
   animate(timestamp: number): void;
   isBlocking(): boolean;
+  isCompleted(): boolean;
 }
 
 export class TranslateAnimation implements CustomAnimation {
@@ -12,66 +13,72 @@ export class TranslateAnimation implements CustomAnimation {
   durationMs: number;
   modelMatrix: mat4;
   vector: vec3;
-  active: boolean;
+  hasStarted: boolean;
+  hasCompleted: boolean;
   translationTotal: vec3;
-  id: number;
-  completionCb?: (id: number) => void;
+  completionCb?: () => void;
 
   constructor(
-    id: number,
     modelMatrix: mat4,
     vector: vec3,
     durationMs: number,
-    completionCb?: (id: number) => void
+    completionCb?: () => void
   ) {
-    this.id = id;
     this.vector = vector;
     this.durationMs = durationMs;
-    this.active = false;
+    this.hasStarted = false;
+    this.hasCompleted = false;
     this.modelMatrix = modelMatrix;
     this.completionCb = completionCb;
     this.translationTotal = vec3.fromValues(0, 0, 0);
   }
 
   animate(timestamp: number) {
-    if (!this.active) {
-      this.active = true;
+    if (!this.hasStarted) {
+      this.hasStarted = true;
       this.prevFrameTimestamp = timestamp;
       this.endFrameTimestamp = timestamp + this.durationMs;
       this.startFrameTimestamp = timestamp;
     }
 
-    const progressSinceLastFrame =
-      (Math.min(timestamp, this.endFrameTimestamp) - this.prevFrameTimestamp) /
-      this.durationMs;
+    if (!this.hasCompleted) {
+      const progressSinceLastFrame =
+        (Math.min(timestamp, this.endFrameTimestamp) -
+          this.prevFrameTimestamp) /
+        this.durationMs;
 
-    this.prevFrameTimestamp = timestamp;
+      this.prevFrameTimestamp = timestamp;
 
-    if (timestamp > this.endFrameTimestamp) {
-      if (vec3.equals(this.translationTotal, this.vector)) {
-        mat4.translate(
-          this.modelMatrix,
-          this.modelMatrix,
-          vec3.subtract(vec3.create(), this.vector, this.translationTotal)
-        );
+      if (timestamp > this.endFrameTimestamp) {
+        if (vec3.equals(this.translationTotal, this.vector)) {
+          mat4.translate(
+            this.modelMatrix,
+            this.modelMatrix,
+            vec3.subtract(vec3.create(), this.vector, this.translationTotal)
+          );
+        }
+        this.hasCompleted = true;
+        if (this.completionCb) this.completionCb();
+        return;
       }
 
-      if (this.completionCb) this.completionCb(this.id);
-      return;
+      let frameTranslation = vec3.fromValues(
+        this.vector[0] * progressSinceLastFrame,
+        this.vector[1] * progressSinceLastFrame,
+        this.vector[2] * progressSinceLastFrame
+      );
+      vec3.add(this.translationTotal, this.translationTotal, frameTranslation);
+
+      mat4.translate(this.modelMatrix, this.modelMatrix, frameTranslation);
     }
-
-    let frameTranslation = vec3.fromValues(
-      this.vector[0] * progressSinceLastFrame,
-      this.vector[1] * progressSinceLastFrame,
-      this.vector[2] * progressSinceLastFrame
-    );
-    vec3.add(this.translationTotal, this.translationTotal, frameTranslation);
-
-    mat4.translate(this.modelMatrix, this.modelMatrix, frameTranslation);
   }
 
   isBlocking() {
     return false;
+  }
+
+  isCompleted() {
+    return this.hasCompleted;
   }
 }
 
@@ -83,52 +90,59 @@ export class ScaleAnimation implements CustomAnimation {
   durationMs: number;
   scaleMatrix: mat4;
   factor: number;
-  active: boolean;
-  completionCb?: (id: number) => void;
-  id: number;
+  hasStarted: boolean;
+  hasCompleted: boolean;
+  completionCb?: () => void;
 
   constructor(
-    id: number,
     scaleMatrix: mat4,
     factor: number,
     durationMs: number,
-    completionCb?: (id: number) => void
+    completionCb?: () => void
   ) {
     this.factor = factor - 1;
     this.durationMs = durationMs;
-    this.active = false;
+    this.hasStarted = false;
+    this.hasCompleted = false;
     this.scaleMatrix = scaleMatrix;
     this.baseScaleMatrix = mat4.create();
     this.completionCb = completionCb;
-    this.id = id;
     mat4.copy(this.baseScaleMatrix, this.scaleMatrix);
   }
 
   animate(timestamp: number) {
-    if (!this.active) {
-      this.active = true;
+    if (!this.hasStarted) {
+      this.hasStarted = true;
       this.endFrameTimestamp = timestamp + this.durationMs;
       this.startFrameTimestamp = timestamp;
     }
-    const progressSinceStart =
-      (Math.min(timestamp, this.endFrameTimestamp) - this.startFrameTimestamp) /
-      this.durationMs;
 
-    var factor = 1 + this.factor * progressSinceStart;
+    if (!this.hasCompleted) {
+      const progressSinceStart =
+        (Math.min(timestamp, this.endFrameTimestamp) -
+          this.startFrameTimestamp) /
+        this.durationMs;
 
-    mat4.scale(
-      this.scaleMatrix,
-      this.baseScaleMatrix,
-      vec3.fromValues(factor, factor, factor)
-    );
+      var factor = 1 + this.factor * progressSinceStart;
 
-    if (timestamp > this.endFrameTimestamp) {
-      if (this.completionCb) this.completionCb(this.id);
-      return;
+      mat4.scale(
+        this.scaleMatrix,
+        this.baseScaleMatrix,
+        vec3.fromValues(factor, factor, factor)
+      );
+
+      if (timestamp > this.endFrameTimestamp) {
+        this.hasCompleted = true;
+        if (this.completionCb) this.completionCb();
+        return;
+      }
     }
   }
   isBlocking() {
     return true;
+  }
+  isCompleted() {
+    return this.hasCompleted;
   }
 }
 
@@ -140,66 +154,72 @@ export class RotateAnimation implements CustomAnimation {
   modelMatrix: mat4;
   axis: vec3;
   rad: number;
-  active: boolean;
-  id: number;
+  hasStarted: boolean;
+  hasCompleted: boolean;
   rotateTotal: number;
-  completionCb?: (id: number) => void;
+  completionCb?: () => void;
 
   constructor(
-    id: number,
     modelMatrix: mat4,
     rad: number,
     axis: vec3,
     durationMs: number,
-    completionCb?: (id: number) => void
+    completionCb?: () => void
   ) {
-    this.id = id;
     this.axis = axis;
     this.durationMs = durationMs;
     this.rad = rad;
-    this.active = false;
+    this.hasStarted = false;
+    this.hasCompleted = false;
     this.modelMatrix = modelMatrix;
     this.completionCb = completionCb;
     this.rotateTotal = 0;
   }
 
   animate(timestamp: number) {
-    if (!this.active) {
-      this.active = true;
+    if (!this.hasStarted) {
+      this.hasStarted = true;
       this.prevFrameTimestamp = timestamp;
       this.endFrameTimestamp = timestamp + this.durationMs;
       this.startFrameTimestamp = timestamp;
     }
 
-    const progressSinceLastFrame =
-      (Math.min(timestamp, this.endFrameTimestamp) - this.prevFrameTimestamp) /
-      this.durationMs;
+    if (!this.hasCompleted) {
+      const progressSinceLastFrame =
+        (Math.min(timestamp, this.endFrameTimestamp) -
+          this.prevFrameTimestamp) /
+        this.durationMs;
 
-    this.prevFrameTimestamp = timestamp;
+      this.prevFrameTimestamp = timestamp;
 
-    if (
-      timestamp > this.endFrameTimestamp ||
-      this.rotateTotal > Math.abs(this.rad)
-    ) {
-      if (this.rotateTotal !== this.rad) {
-        mat4.rotate(
-          this.modelMatrix,
-          this.modelMatrix,
-          this.rad - this.rotateTotal,
-          this.axis
-        );
+      if (
+        timestamp > this.endFrameTimestamp ||
+        this.rotateTotal > Math.abs(this.rad)
+      ) {
+        if (this.rotateTotal !== this.rad) {
+          mat4.rotate(
+            this.modelMatrix,
+            this.modelMatrix,
+            this.rad - this.rotateTotal,
+            this.axis
+          );
+        }
+        this.hasCompleted = true;
+        if (this.completionCb) this.completionCb();
+        return;
       }
-      if (this.completionCb) this.completionCb(this.id);
-      return;
+
+      let frameRotation = this.rad * progressSinceLastFrame;
+      this.rotateTotal += frameRotation;
+
+      mat4.rotate(this.modelMatrix, this.modelMatrix, frameRotation, this.axis);
     }
-
-    let frameRotation = this.rad * progressSinceLastFrame;
-    this.rotateTotal += frameRotation;
-
-    mat4.rotate(this.modelMatrix, this.modelMatrix, frameRotation, this.axis);
   }
 
   isBlocking() {
     return false;
+  }
+  isCompleted() {
+    return this.hasCompleted;
   }
 }

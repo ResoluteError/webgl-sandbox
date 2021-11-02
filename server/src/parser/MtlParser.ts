@@ -13,6 +13,7 @@ export class MtlParser {
     Ke: (data) => this.getEmissionColor(data),
     Ns: (data) => this.getSpecularHighlight(data),
     Ni: (data) => this.getOpticalDensity(data),
+    Tr: (data) => this.getTransparency(data),
     d: (data) => this.getDissolve(data),
     illum: (data) => this.getIlluminationModel(data),
     map_Kd: (data) => this.getTextureFile(data),
@@ -26,6 +27,7 @@ export class MtlParser {
   private emissionColors: Map<num3> = {};
   private specularHighlights: Map<number> = {};
   private opticalDensity: Map<number> = {};
+  private transparency: Map<number> = {};
   private dissolves: Map<number> = {};
   private illuminationModels: Map<number> = {};
   private textureFiles: Map<string> = {};
@@ -93,6 +95,10 @@ export class MtlParser {
 
   private getOpticalDensity(data: string[]) {
     this.opticalDensity[this.currentMaterial] = +data[0];
+  }
+
+  private getTransparency(data: string[]) {
+    this.transparency[this.currentMaterial] = +data[0];
   }
 
   private getDissolve(data: string[]) {

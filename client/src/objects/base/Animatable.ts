@@ -20,33 +20,21 @@ interface AnimatableI {
 }
 
 export class Animatable extends Transformable implements AnimatableI {
-  private animations: { [id: number]: CustomAnimation };
-  private animationIds: number[];
-  private animCounter: number;
+  private animations: CustomAnimation[] = [];
   private scaleInProgress: boolean;
 
   constructor() {
     super();
-    this.animations = {};
-    this.animationIds = [];
-    this.animCounter = 0;
   }
 
   public animTranslateBy(vector: num3, durationMs: number, delay?: number) {
     window.setTimeout(() => {
       this.addAnimation(
         new TranslateAnimation(
-          this.animCounter,
           this.rotationAndtranslationMatrix,
           vector,
           durationMs,
-          (id: number) => {
-            this.animations[id] = null;
-            this.animationIds.splice(
-              this.animationIds.findIndex((animId) => animId === id),
-              1
-            );
-          }
+          () => {}
         )
       );
     }, delay);
@@ -61,18 +49,11 @@ export class Animatable extends Transformable implements AnimatableI {
     window.setTimeout(() => {
       this.addAnimation(
         new RotateAnimation(
-          this.animCounter,
           this.rotationAndtranslationMatrix,
           rad,
           axis,
           durationMs,
-          (id: number) => {
-            this.animations[id] = null;
-            this.animationIds.splice(
-              this.animationIds.findIndex((animId) => animId === id),
-              1
-            );
-          }
+          () => {}
         )
       );
     }, delay);
@@ -86,20 +67,7 @@ export class Animatable extends Transformable implements AnimatableI {
     this.scaleInProgress = true;
     window.setTimeout(() => {
       this.addAnimation(
-        new ScaleAnimation(
-          this.animCounter,
-          this.scaleMatrix,
-          factor,
-          durationMs,
-          (id: number) => {
-            this.scaleInProgress = false;
-            this.animations[id] = null;
-            this.animationIds.splice(
-              this.animationIds.findIndex((animId) => animId === id),
-              1
-            );
-          }
-        )
+        new ScaleAnimation(this.scaleMatrix, factor, durationMs, () => {})
       );
     }, delay);
   }
@@ -118,15 +86,13 @@ export class Animatable extends Transformable implements AnimatableI {
 
   // Calculates animation increments
   public postRender(timestamp: number) {
-    this.animationIds.forEach((animationId) => {
-      if (this.animations[animationId])
-        this.animations[animationId].animate(timestamp);
-    });
+    () => {
+      this.animations = this.animations.filter((anim) => !anim.isCompleted());
+    };
+    this.animations.forEach((anim) => anim.animate(timestamp));
   }
 
   private addAnimation(animation: CustomAnimation) {
-    this.animations[this.animCounter] = animation;
-    this.animationIds.push(this.animCounter);
-    this.animCounter++;
+    this.animations.push(animation);
   }
 }
