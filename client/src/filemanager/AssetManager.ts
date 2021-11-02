@@ -44,4 +44,8 @@ export class AssetManager {
       });
     });
   }
+
+  getAsset(assetName: string) {
+    return this.assets[assetName];
+  }
 }

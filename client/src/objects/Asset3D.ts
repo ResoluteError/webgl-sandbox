@@ -4,6 +4,7 @@ import { Animatable } from "./base/Animatable";
 
 export class Asset3D extends Animatable {
   private objects: { [objName: string]: Object3D } = {};
+  private assetData: AssetData;
   private gl: WebGL2RenderingContext;
 
   constructor(gl: WebGL2RenderingContext, assetData: AssetData) {
@@ -14,6 +15,7 @@ export class Asset3D extends Animatable {
 
   public put(assetData: AssetData) {
     let objects = Object.keys(assetData.objects);
+    this.assetData = assetData;
     console.log(`Creating objects for Asset '${assetData.name}':`, objects);
     for (var currentObject of objects) {
       let obj: Object3D;
@@ -39,6 +41,10 @@ export class Asset3D extends Animatable {
       );
       this.objects[currentObject] = obj;
     }
+  }
+
+  public clone(): Asset3D {
+    return new Asset3D(this.gl, this.assetData);
   }
 
   public getObjects() {
