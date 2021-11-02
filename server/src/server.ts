@@ -2,13 +2,11 @@ import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import { ObjAssetManager } from "./AssetManager";
-import { FileManager } from "./FileManager";
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-const fileManager = new FileManager("public/files");
 const assetManager = new ObjAssetManager("public/assets");
 
 io.of("/assets").on("connection", (socket) => {
@@ -60,47 +58,6 @@ io.of("/assets").on("connection", (socket) => {
         console.error(`Error on asset '${assetName}' fetch_and_sub: `, err);
         socket.emit("asset_error", err);
       });
-  });
-});
-
-io.of("/files").on("connection", (socket) => {
-  console.log("a user connected");
-
-  socket.on("disconnect", () => {
-    console.log("user disconnected");
-  });
-
-  socket.on("file_sub", ({ filepath }) => {
-    fileManager
-      .getFileObservable(filepath, (err) => {
-        socket.emit("file_error", err);
-      })
-      .subscribe((file) => {
-        if (!file) return;
-        socket.emit("file_data", file);
-      });
-  });
-
-  socket.on("file_fetch", ({ filepath }) => {
-    fileManager.fetchFile(filepath, (err, file) => {
-      if (err) {
-        return socket.emit("file_error", err.message);
-      }
-      socket.emit("file_data", file);
-    });
-  });
-
-  socket.on("file_fetch_and_sub", ({ filepath }) => {
-    fileManager.fetchFile(filepath, (err, file) => {
-      if (err) {
-        return socket.emit("file_error", err);
-      }
-      socket.emit("file_data", file);
-      fileManager.getFileObservable(filepath).subscribe((file) => {
-        if (!file) return;
-        socket.emit("file_data", file);
-      });
-    });
   });
 });
 

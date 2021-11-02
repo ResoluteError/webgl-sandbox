@@ -34,7 +34,11 @@ export class Animatable extends Transformable implements AnimatableI {
           this.rotationAndtranslationMatrix,
           vector,
           durationMs,
-          () => {}
+          () => {
+            this.animations = this.animations.filter(
+              (anim) => !anim.isCompleted()
+            );
+          }
         )
       );
     }, delay);
@@ -53,7 +57,11 @@ export class Animatable extends Transformable implements AnimatableI {
           rad,
           axis,
           durationMs,
-          () => {}
+          () => {
+            this.animations = this.animations.filter(
+              (anim) => !anim.isCompleted()
+            );
+          }
         )
       );
     }, delay);
@@ -67,7 +75,11 @@ export class Animatable extends Transformable implements AnimatableI {
     this.scaleInProgress = true;
     window.setTimeout(() => {
       this.addAnimation(
-        new ScaleAnimation(this.scaleMatrix, factor, durationMs, () => {})
+        new ScaleAnimation(this.scaleMatrix, factor, durationMs, () => {
+          this.animations = this.animations.filter(
+            (anim) => !anim.isCompleted()
+          );
+        })
       );
     }, delay);
   }
@@ -86,9 +98,6 @@ export class Animatable extends Transformable implements AnimatableI {
 
   // Calculates animation increments
   public postRender(timestamp: number) {
-    () => {
-      this.animations = this.animations.filter((anim) => !anim.isCompleted());
-    };
     this.animations.forEach((anim) => anim.animate(timestamp));
   }
 
